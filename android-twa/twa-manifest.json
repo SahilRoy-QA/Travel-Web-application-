@@ -1,0 +1,56 @@
+{
+  "packageId": "com.illusion.travel",
+  "host": "ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app",
+  "name": "ILLUSION Travel & Hotels",
+  "launcherName": "ILLUSION",
+  "display": "standalone",
+  "themeColor": "#FFFFFF",
+  "themeColorDark": "#0B1120",
+  "navigationColor": "#FFFFFF",
+  "navigationColorDark": "#0B1120",
+  "navigationDividerColor": "#E2E8F0",
+  "navigationDividerColorDark": "#1E293B",
+  "backgroundColor": "#0B1120",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/pwa-512x512.png",
+  "maskableIconUrl": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/pwa-maskable-512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./illusion-keystore.jks",
+    "alias": "illusion-twa"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "My Trips",
+      "shortName": "Trips",
+      "url": "/trips",
+      "icon": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/pwa-192x192.png"
+    },
+    {
+      "name": "Search Hotels",
+      "shortName": "Hotels",
+      "url": "/hotels",
+      "icon": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/pwa-192x192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": false
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false
+}

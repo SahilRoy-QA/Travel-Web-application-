@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Allow read for everyone (images, banners, room photos)
+      allow read: if true;
+      // Allow write if signed in (e.g. admin or agent photo uploads)
+      allow write: if request.auth != null;
+    }
+  }
+}

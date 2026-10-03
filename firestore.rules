@@ -1,0 +1,183 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isSuperAdminEmail() {
+      return isSignedIn() &&
+        request.auth.token.email != null &&
+        request.auth.token.email.lower() == 'roysahil579@gmail.com';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isSuperAdminEmail() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'])
+      );
+    }
+
+    function isAgent() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agent';
+    }
+
+    // Validation helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128;
+    }
+
+    // Test doc for connection check
+    match /test/{testId} {
+      allow read: if true;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId && (
+        request.resource.data.role == 'customer' ||
+        request.resource.data.role == 'agent' ||
+        (isSuperAdminEmail() && request.resource.data.role in ['admin', 'super_admin'])
+      );
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isBlocked']) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['preferences']) ||
+         (request.resource.data.preferences.theme in ['light', 'dark', 'system']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Hotels
+    match /hotels/{hotelId} {
+      allow get, list: if resource.data.isPublished == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Rooms
+    match /rooms/{roomId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Room Inventory
+    match /roomInventory/{inventoryId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Packages
+    match /packages/{packageId} {
+      allow get, list: if resource.data.isPublished == true || isAdmin() || (
+        isAgent() && resource.data.agentId == request.auth.uid
+      );
+      allow create: if isAdmin() || (
+        isAgent() && request.resource.data.agentId == request.auth.uid
+      );
+      allow update, delete: if isAdmin() || (
+        isAgent() && resource.data.agentId == request.auth.uid
+      );
+    }
+
+    // Services
+    match /services/{serviceId} {
+      allow get, list: if resource.data.isAvailable == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Destinations
+    match /destinations/{destId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Banners
+    match /banners/{bannerId} {
+      allow get, list: if resource.data.isActive == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Coupons
+    match /coupons/{couponId} {
+      allow get, list: if resource.data.isActive == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Settings (branding, homepage sections, feature flags, policies)
+    match /settings/{settingId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    // Bookings
+    match /bookings/{bookingId} {
+      allow get, list: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin() ||
+        (isAgent() && resource.data.agentId == request.auth.uid)
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || (
+        isSignedIn() &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.bookingStatus == 'cancelled' &&
+        resource.data.bookingStatus in ['confirmed', 'pending'] &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bookingStatus', 'cancellationReason', 'updatedAt'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow get, list: if resource.data.isApproved == true || isAdmin() || (
+        isSignedIn() && resource.data.userId == request.auth.uid
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Wishlists
+    match /wishlists/{wishlistId} {
+      allow get, list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow get, list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Agents
+    match /agents/{agentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin() || (isSignedIn() && request.resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Audit logs
+    match /auditLogs/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isSignedIn();
+    }
+  }
+}

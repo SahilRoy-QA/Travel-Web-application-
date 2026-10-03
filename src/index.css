@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/* -------------------------------------------------------
+   Semantic Design Tokens & Theming System
+   ------------------------------------------------------- */
+:root {
+  /* Surface Tokens */
+  --bg-background: #ffffff;
+  --bg-surface: #f8fafc;
+  --bg-surface-elevated: #ffffff;
+
+  /* Border Tokens */
+  --border-token: #e2e8f0;
+  --border-subtle: #f1f5f9;
+
+  /* Text Tokens */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  /* Brand & Feedback Tokens */
+  --brand-primary: #0b1120;
+  --brand-primary-foreground: #ffffff;
+  --brand-accent: #0284c7;
+  --brand-accent-foreground: #ffffff;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --ring-token: #0284c7;
+
+  color-scheme: light;
+}
+
+html.dark {
+  /* Surface Tokens (Deep navy/slate surfaces, not pure black) */
+  --bg-background: #0b1120;
+  --bg-surface: #0f172a;
+  --bg-surface-elevated: #1e293b;
+
+  /* Border Tokens */
+  --border-token: #1e293b;
+  --border-subtle: #141e33;
+
+  /* Text Tokens (Soft off-white) */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* Brand & Feedback Tokens */
+  --brand-primary: #38bdf8;
+  --brand-primary-foreground: #0b1120;
+  --brand-accent: #0284c7;
+  --brand-accent-foreground: #ffffff;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --ring-token: #38bdf8;
+
+  color-scheme: dark;
+}
+
+/* Base Body Styles & Smooth Theme Transition */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+/* Accessibility: Respect Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  body,
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+/* Semantic Utility Classes */
+.bg-theme-bg {
+  background-color: var(--bg-background);
+}
+.bg-theme-surface {
+  background-color: var(--bg-surface);
+}
+.bg-theme-elevated {
+  background-color: var(--bg-surface-elevated);
+}
+.border-theme {
+  border-color: var(--border-token);
+}
+.text-theme-primary {
+  color: var(--text-primary);
+}
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+.text-theme-muted {
+  color: var(--text-muted);
+}
+.text-theme-accent {
+  color: var(--brand-accent);
+}
+.bg-theme-accent {
+  background-color: var(--brand-accent);
+}
+
+/* Focus Ring Accessibility */
+*:focus-visible {
+  outline: 2px solid var(--ring-token);
+  outline-offset: 2px;
+}
+
+/* Image Readability in Dark Mode: Subtle softening */
+html.dark img:not(.no-dim) {
+  filter: brightness(0.92) contrast(1.02);
+}
+
+/* -------------------------------------------------------
+   Print Stylesheet: Ensures Vouchers & Invoices Always Print
+   in Clean, Ink-Friendly Light Mode Regardless of Active Theme
+   ------------------------------------------------------- */
+@media print {
+  html,
+  body,
+  html.dark,
+  html.dark body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    color-scheme: light !important;
+  }
+
+  .no-print,
+  header,
+  footer,
+  nav,
+  button,
+  .pwa-banner {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+  }
+}

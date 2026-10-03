@@ -1,0 +1,6 @@
+{
+  "name": "ILLUSION - Travel & Hotel Booking Platform",
+  "description": "Discover luxury stays, hotels, and holiday tour packages on ILLUSION with live availability, instant confirmation, and seamless booking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

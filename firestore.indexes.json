@@ -1,0 +1,45 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "hotels",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "destinationCity", "order": "ASCENDING" },
+        { "fieldPath": "minPrice", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "hotels",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isPublished", "order": "ASCENDING" },
+        { "fieldPath": "starRating", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "packages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "destinationId", "order": "ASCENDING" },
+        { "fieldPath": "pricePerTraveller", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "agentId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
