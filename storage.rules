@@ -1,11 +1,28 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // Default deny
     match /{allPaths=**} {
-      // Allow read for everyone (images, banners, room photos)
+      allow read, write: if false;
+    }
+
+    // Public read for carousel travel photos, write only for authenticated admins
+    match /carousel/{imageId} {
       allow read: if true;
-      // Allow write if signed in (e.g. admin or agent photo uploads)
-      allow write: if request.auth != null;
+      allow write: if request.auth != null &&
+        (
+          (request.auth.token.email != null && request.auth.token.email.lower() == 'roysahil579@gmail.com') ||
+          (firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+           firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'])
+        ) &&
+        request.resource.size <= 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow delete: if request.auth != null &&
+        (
+          (request.auth.token.email != null && request.auth.token.email.lower() == 'roysahil579@gmail.com') ||
+          (firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+           firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'])
+        );
     }
   }
 }

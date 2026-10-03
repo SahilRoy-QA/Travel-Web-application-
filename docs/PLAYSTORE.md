@@ -144,6 +144,7 @@ For a Trusted Web Activity to render seamlessly without the browser URL bar, Goo
 ## 7. Zero-Downtime Over-The-Air (OTA) Updates
 
 - **Web Updates Ship Instantly**: Any UI changes, booking features, styling, or dynamic settings updated on the website reflect **instantly** in the installed Android app without requiring a new Play Store release!
+- **Dynamic Hero Photo Carousel**: New carousel background photos, seasonal scheduling, focal points, and animation timing adjustments published in the Admin Carousel Editor (`/admin/carousel`) sync live to all installed Android TWA users over-the-air with **no new AAB compilation needed**.
 - **When a new AAB is required**: Only when updating native Android permissions, splash screen, launcher icons, or the Android package ID.
 - To update the native wrapper:
   1. Increment `appVersionCode` (e.g., from 1 to 2) and `appVersionName` (e.g., to "1.0.1") in `twa-manifest.json`.

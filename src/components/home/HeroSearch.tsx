@@ -10,6 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
+import { HeroCarousel } from './HeroCarousel';
 
 export const HeroSearch: React.FC = () => {
   const { branding, sections } = useSettings();
@@ -57,13 +58,12 @@ export const HeroSearch: React.FC = () => {
   };
 
   return (
-    <div className="relative bg-slate-950 text-white pt-10 pb-20 sm:pt-16 sm:pb-28 overflow-hidden transition-colors">
-      {/* Background Graphic & Subtle Sky Ambient Glow */}
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#0284c7_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
-      <div className="absolute -top-40 -right-40 w-96 h-96 bg-sky-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="relative bg-slate-950 text-white pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden transition-colors min-h-[580px] sm:min-h-[640px] flex flex-col justify-center">
+      {/* Dynamic Full-Bleed Background Photo Carousel Layer */}
+      <HeroCarousel />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero Content Layer */}
+      <div className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-4">
             <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />

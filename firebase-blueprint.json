@@ -177,6 +177,48 @@
         "updatedAt": { "type": "string", "format": "date-time" },
         "updatedBy": { "type": "string", "maxLength": 128 }
       }
+    },
+    "HeroCarouselConfig": {
+      "title": "Hero Carousel Config",
+      "description": "Global timing, animation, and scrim settings for the homepage photo carousel",
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "intervalMs": { "type": "number" },
+        "transitionMs": { "type": "number" },
+        "transitionType": { "type": "string", "enum": ["fade", "slide", "kenburns"] },
+        "showDots": { "type": "boolean" },
+        "showArrows": { "type": "boolean" },
+        "showCaptions": { "type": "boolean" },
+        "shuffle": { "type": "boolean" },
+        "scrimOpacityLight": { "type": "number" },
+        "scrimOpacityDark": { "type": "number" },
+        "patternOverlayEnabled": { "type": "boolean" },
+        "patternOpacity": { "type": "number" }
+      }
+    },
+    "HeroCarouselSlide": {
+      "title": "Hero Carousel Slide",
+      "description": "Individual photo slide with desktop/mobile crops, focal point, and scheduling",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "imageUrlDesktop": { "type": "string" },
+        "imageUrlMobile": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "storagePath": { "type": "string", "maxLength": 500 },
+        "altText": { "type": "string", "maxLength": 200, "minLength": 5 },
+        "caption": { "type": "string", "maxLength": 120 },
+        "linkUrl": { "type": "string", "maxLength": 500 },
+        "focalX": { "type": "number" },
+        "focalY": { "type": "number" },
+        "order": { "type": "number" },
+        "active": { "type": "boolean" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["altText", "order", "active"]
     }
   },
   "firestore": {
@@ -223,6 +265,14 @@
     "/settings/{settingDoc}": {
       "schema": { "$ref": "#/entities/Setting" },
       "description": "Dynamic platform settings and configurations"
+    },
+    "/heroCarousel/config": {
+      "schema": { "$ref": "#/entities/HeroCarouselConfig" },
+      "description": "Hero photo carousel global configuration"
+    },
+    "/heroCarousel/slides/items/{slideId}": {
+      "schema": { "$ref": "#/entities/HeroCarouselSlide" },
+      "description": "Individual hero photo carousel slides"
     }
   }
 }

@@ -30,6 +30,7 @@ import { ThemePreviewPage } from './pages/dev/ThemePreviewPage';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminSiteBuilder } from './pages/admin/AdminSiteBuilder';
+import { AdminCarouselEditor } from './pages/admin/AdminCarouselEditor';
 import { AdminHotels } from './pages/admin/AdminHotels';
 import { AdminPackages } from './pages/admin/AdminPackages';
 import { AdminAgents } from './pages/admin/AdminAgents';
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="site-builder" element={<AdminSiteBuilder />} />
+                <Route path="carousel" element={<AdminCarouselEditor />} />
                 <Route path="hotels" element={<AdminHotels />} />
                 <Route path="packages" element={<AdminPackages />} />
                 <Route path="agents" element={<AdminAgents />} />

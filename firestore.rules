@@ -179,5 +179,35 @@ service cloud.firestore {
       allow get, list: if isAdmin();
       allow create: if isSignedIn();
     }
+
+    // Hero Photo Carousel Config and Slides
+    function isValidCarouselConfig(data) {
+      return data.enabled is bool &&
+             data.intervalMs is number && data.intervalMs >= 2000 && data.intervalMs <= 15000 &&
+             data.transitionMs is number && data.transitionMs >= 300 && data.transitionMs <= 2000 &&
+             data.transitionType in ['fade', 'slide', 'kenburns'] &&
+             data.scrimOpacityLight is number && data.scrimOpacityLight >= 0.0 && data.scrimOpacityLight <= 1.0 &&
+             data.scrimOpacityDark is number && data.scrimOpacityDark >= 0.0 && data.scrimOpacityDark <= 1.0;
+    }
+
+    function isValidCarouselSlide(data) {
+      return data.altText is string && data.altText.size() >= 5 && data.altText.size() <= 200 &&
+             (!('caption' in data) || (data.caption is string && data.caption.size() <= 120)) &&
+             (!('linkUrl' in data) || (data.linkUrl is string && (data.linkUrl.size() == 0 || data.linkUrl.matches('^/.*') || data.linkUrl.matches('^https://.*')))) &&
+             data.active is bool &&
+             data.order is number &&
+             data.focalX is number && data.focalX >= 0 && data.focalX <= 100 &&
+             data.focalY is number && data.focalY >= 0 && data.focalY <= 100;
+    }
+
+    match /heroCarousel/config {
+      allow read: if true;
+      allow write: if isAdmin() && isValidCarouselConfig(request.resource.data);
+    }
+
+    match /heroCarousel/slides/items/{slideId} {
+      allow read: if resource.data.active == true || isAdmin();
+      allow write: if isAdmin() && isValidCarouselSlide(request.resource.data);
+    }
   }
 }

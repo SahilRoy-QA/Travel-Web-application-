@@ -8,6 +8,7 @@ import {
   Database,
   Globe,
   Hotel,
+  Image as ImageIcon,
   Layers,
   LayoutDashboard,
   LogOut,
@@ -85,6 +86,7 @@ export const AdminLayout: React.FC = () => {
   const navItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { label: 'Site Builder & Theme', path: '/admin/site-builder', icon: Layers },
+    { label: 'Carousel Editor', path: '/admin/carousel', icon: ImageIcon },
     { label: 'Hotels & Rooms', path: '/admin/hotels', icon: Hotel },
     { label: 'Tour Packages', path: '/admin/packages', icon: Luggage },
     { label: 'Tour Agents', path: '/admin/agents', icon: UserCheck },
