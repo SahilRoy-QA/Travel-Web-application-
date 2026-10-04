@@ -25,6 +25,7 @@ import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { OfflineFallbackPage } from './pages/OfflineFallbackPage';
 import { ThemePreviewPage } from './pages/dev/ThemePreviewPage';
+import { BrandPreviewPage } from './pages/dev/BrandPreviewPage';
 
 // Admin Panel Pages
 import { AdminLayout } from './pages/admin/AdminLayout';
@@ -81,6 +82,7 @@ export default function App() {
               <Route path="/privacy" element={<PublicLayout><PrivacyPage /></PublicLayout>} />
               <Route path="/offline" element={<OfflineFallbackPage />} />
               <Route path="/dev/theme-preview" element={<ThemePreviewPage />} />
+              <Route path="/dev/brand" element={<BrandPreviewPage />} />
 
               {/* Secure Admin Panel Routes (/admin) */}
               <Route path="/admin" element={<AdminLayout />}>

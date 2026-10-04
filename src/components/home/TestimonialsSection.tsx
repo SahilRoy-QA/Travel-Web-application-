@@ -11,7 +11,7 @@ export const TestimonialsSection: React.FC<{ section: HomepageSection }> = ({ se
       stay: 'The Grand Horizon Resort, Goa',
       date: 'Visited September 2026',
       comment:
-        'The live room availability on ILLUSION was so seamless! Checked in at Goa without a minute delay, and the ocean view suite was exactly as pictured. Will book again!',
+        'The live room availability on Travelly was so seamless! Checked in at Goa without a minute delay, and the ocean view suite was exactly as pictured. Will book again!',
     },
     {
       name: 'Vikram Malhotra',
@@ -20,7 +20,7 @@ export const TestimonialsSection: React.FC<{ section: HomepageSection }> = ({ se
       stay: 'Royal Rajasthan Heritage Odyssey',
       date: 'Visited August 2026',
       comment:
-        'Our chauffeur and tour guide arranged by the ILLUSION agent was exceptional. The palace stays in Udaipur were royalty incarnate. Outstanding customer care!',
+        'Our chauffeur and tour guide arranged by the Travelly agent was exceptional. The palace stays in Udaipur were royalty incarnate. Outstanding customer care!',
     },
     {
       name: 'Ananya Deshmukh',

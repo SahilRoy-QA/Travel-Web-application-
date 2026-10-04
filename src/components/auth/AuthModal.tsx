@@ -319,7 +319,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {loading
                 ? 'Processing...'
                 : mode === 'login'
-                ? 'Sign In to ILLUSION'
+                ? 'Sign In to Travelly'
                 : mode === 'register'
                 ? 'Create My Account'
                 : 'Send Password Reset Link'}

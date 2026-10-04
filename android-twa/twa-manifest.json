@@ -1,8 +1,8 @@
 {
-  "packageId": "com.illusion.travel",
-  "host": "ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app",
-  "name": "ILLUSION Travel & Hotels",
-  "launcherName": "ILLUSION",
+  "packageId": "com.travelly.app",
+  "host": "ais-pre-ksgdlw2enklqhhy54gblzk-622889354934.asia-southeast1.run.app",
+  "name": "Travelly",
+  "launcherName": "Travelly",
   "display": "standalone",
   "themeColor": "#FFFFFF",
   "themeColorDark": "#0B1120",
@@ -13,12 +13,12 @@
   "backgroundColor": "#0B1120",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/pwa-512x512.png",
-  "maskableIconUrl": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/pwa-maskable-512x512.png",
+  "iconUrl": "https://ais-pre-ksgdlw2enklqhhy54gblzk-622889354934.asia-southeast1.run.app/icons/icon-512.png",
+  "maskableIconUrl": "https://ais-pre-ksgdlw2enklqhhy54gblzk-622889354934.asia-southeast1.run.app/icons/maskable-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "./illusion-keystore.jks",
-    "alias": "illusion-twa"
+    "path": "./travelly-keystore.jks",
+    "alias": "travelly-twa"
   },
   "appVersionName": "1.0.0",
   "appVersionCode": 1,
@@ -27,17 +27,17 @@
       "name": "My Trips",
       "shortName": "Trips",
       "url": "/trips",
-      "icon": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/pwa-192x192.png"
+      "icon": "https://ais-pre-ksgdlw2enklqhhy54gblzk-622889354934.asia-southeast1.run.app/icons/icon-192.png"
     },
     {
       "name": "Search Hotels",
       "shortName": "Hotels",
       "url": "/hotels",
-      "icon": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/pwa-192x192.png"
+      "icon": "https://ais-pre-ksgdlw2enklqhhy54gblzk-622889354934.asia-southeast1.run.app/icons/icon-192.png"
     }
   ],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://ais-pre-dht7u2lwlcldbsj7qnxw2j-609847917316.asia-southeast1.run.app/manifest.webmanifest",
+  "webManifestUrl": "https://ais-pre-ksgdlw2enklqhhy54gblzk-622889354934.asia-southeast1.run.app/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {
     "locationDelegation": {

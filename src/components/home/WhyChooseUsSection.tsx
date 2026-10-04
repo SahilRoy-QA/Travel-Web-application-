@@ -31,7 +31,7 @@ export const WhyChooseUsSection: React.FC<{ section: HomepageSection }> = ({ sec
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
-            The ILLUSION Promise
+            The Travelly Promise
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
             {section.title}

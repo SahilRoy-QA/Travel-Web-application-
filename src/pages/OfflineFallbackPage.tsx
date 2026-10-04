@@ -6,12 +6,22 @@ export const OfflineFallbackPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex items-center justify-center p-4 text-center transition-colors">
       <div className="max-w-md bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6">
-        <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
-          <WifiOff className="w-8 h-8" />
+        <div className="flex flex-col items-center justify-center gap-2">
+          <img
+            src="/icons/icon-192.png"
+            alt="Travelly"
+            className="w-16 h-16 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800"
+            width="64"
+            height="64"
+          />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-xs font-semibold">
+            <WifiOff className="w-3.5 h-3.5" />
+            <span>Connection Offline</span>
+          </div>
         </div>
 
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">You're Offline</h1>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Travelly is Offline</h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
             It looks like your internet connection is unavailable. Don't worry, your app shell and cached bookings remain accessible.
           </p>

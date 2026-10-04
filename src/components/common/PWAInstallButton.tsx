@@ -13,17 +13,26 @@ export const PWAInstallButton: React.FC<{ variant?: 'header' | 'banner' }> = ({ 
   if (isInstallable) {
     if (variant === 'banner') {
       return (
-        <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
-          <div>
-            <h4 className="font-semibold text-sm sm:text-base">Install ILLUSION App</h4>
-            <p className="text-xs text-slate-300">Fast, offline-ready booking on your home screen with zero app store delays.</p>
+        <div className="bg-slate-900 border border-slate-800 text-white rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+          <div className="flex items-center gap-3">
+            <img
+              src="/icons/icon-192.png"
+              alt="Travelly"
+              className="w-12 h-12 rounded-xl shrink-0 shadow-sm border border-slate-700/60"
+              width="48"
+              height="48"
+            />
+            <div>
+              <h4 className="font-bold text-sm sm:text-base">Install Travelly App</h4>
+              <p className="text-xs text-slate-300">Fast, offline-ready booking on your home screen with zero app store delays.</p>
+            </div>
           </div>
           <button
             onClick={install}
-            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all shadow-md shrink-0 cursor-pointer"
+            className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-md shrink-0 cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            Install App
+            <span>Install App</span>
           </button>
         </div>
       );
@@ -32,8 +41,8 @@ export const PWAInstallButton: React.FC<{ variant?: 'header' | 'banner' }> = ({ 
     return (
       <button
         onClick={install}
-        className="flex items-center gap-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 text-xs font-semibold shadow-sm transition-all cursor-pointer"
-        title="Install ILLUSION Web App"
+        className="flex items-center gap-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 text-xs font-bold shadow-sm transition-all cursor-pointer"
+        title="Install Travelly Web App"
       >
         <Download className="w-3.5 h-3.5" />
         <span>Install App</span>
@@ -46,20 +55,29 @@ export const PWAInstallButton: React.FC<{ variant?: 'header' | 'banner' }> = ({ 
       <>
         <button
           onClick={() => setShowIOSGuide(true)}
-          className="flex items-center gap-1.5 rounded-lg border border-slate-300 hover:border-slate-400 bg-white/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-1 text-xs font-medium transition cursor-pointer"
+          className="flex items-center gap-1.5 rounded-xl border border-slate-300 hover:border-slate-400 bg-white/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-1 text-xs font-semibold transition cursor-pointer"
         >
-          <Share2 className="w-3 h-3 text-orange-600" />
+          <Share2 className="w-3 h-3 text-sky-600 dark:text-sky-400" />
           <span>Add to Home Screen</span>
         </button>
 
         {showIOSGuide && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Install on iPhone / iPad</h3>
+            <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src="/icons/icon-192.png"
+                    alt="Travelly"
+                    className="w-8 h-8 rounded-lg"
+                    width="32"
+                    height="32"
+                  />
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Install Travelly on iOS</h3>
+                </div>
                 <button
                   onClick={() => setShowIOSGuide(false)}
-                  className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -67,11 +85,11 @@ export const PWAInstallButton: React.FC<{ variant?: 'header' | 'banner' }> = ({ 
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
                 1. Tap the <strong>Share button</strong> (square with arrow up) at the bottom of Safari.<br />
                 2. Scroll down and tap <strong>Add to Home Screen</strong>.<br />
-                3. Tap <strong>Add</strong> to launch ILLUSION like a native iOS app.
+                3. Tap <strong>Add</strong> to launch Travelly like a native iOS app.
               </p>
               <button
                 onClick={() => setShowIOSGuide(false)}
-                className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-2.5 text-sm font-semibold transition"
+                className="w-full rounded-xl bg-slate-900 dark:bg-sky-600 hover:bg-slate-800 dark:hover:bg-sky-500 text-white py-2.5 text-sm font-semibold transition cursor-pointer"
               >
                 Got it
               </button>

@@ -13,14 +13,14 @@ import {
 } from '../types';
 
 export const defaultBranding: BrandingSettings = {
-  brandName: 'ILLUSION',
-  tagline: 'Elevate Every Journey. Discover Luxury Stays & Escapes.',
-  logoUrl: '/icon.svg',
+  brandName: 'Travelly',
+  tagline: 'Your Global Journey Awaits. Discover Luxury Stays & Escapes.',
+  logoUrl: '/icons/icon-192.png',
   primaryColor: '#0b1120',
   accentColor: '#0284c7',
-  contactEmail: 'support@illusiontravel.com',
+  contactEmail: 'support@travelly.com',
   contactPhone: '+91 98765 43210',
-  address: 'ILLUSION Tower, Connaught Place, New Delhi - 110001, India',
+  address: 'Travelly Tower, Connaught Place, New Delhi - 110001, India',
   socialLinks: {
     facebook: 'https://facebook.com',
     twitter: 'https://twitter.com',
@@ -116,7 +116,7 @@ export const defaultSections: HomepageSection[] = [
     id: 'why_choose_us',
     name: 'Why Choose Us',
     type: 'why_choose_us',
-    title: 'Why Book With ILLUSION',
+    title: 'Why Book With Travelly',
     subtitle: 'Transparent prices, zero hidden fees, and 24/7 concierge support every mile of your trip.',
     enabled: true,
     order: 6,
@@ -126,7 +126,7 @@ export const defaultSections: HomepageSection[] = [
     name: 'Guest Testimonials',
     type: 'testimonials',
     title: 'Loved by Over 500,000 Travelers',
-    subtitle: 'Real stories and verified experiences from guests who explored with ILLUSION.',
+    subtitle: 'Real stories and verified experiences from guests who explored with Travelly.',
     enabled: true,
     order: 7,
   },

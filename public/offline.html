@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline - ILLUSION</title>
+  <title>Offline - Travelly</title>
+  <link rel="icon" href="/icons/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
   <style>
     :root {
       --bg: #ffffff;
@@ -46,16 +48,13 @@
       text-align: center;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     }
-    .icon {
-      width: 3.5rem;
-      height: 3.5rem;
-      border-radius: 50%;
-      background: rgba(245, 158, 11, 0.1);
-      color: #f59e0b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .brand-icon {
+      width: 4.5rem;
+      height: 4.5rem;
+      border-radius: 1.25rem;
       margin: 0 auto 1.25rem;
+      display: block;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     h1 {
       font-size: 1.5rem;
@@ -86,19 +85,9 @@
 </head>
 <body>
   <div class="card">
-    <div class="icon">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="1" y1="1" x2="23" y2="23"></line>
-        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
-        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-        <line x1="12" y1="20" x2="12.01" y2="20"></line>
-      </svg>
-    </div>
+    <img src="/icons/icon-192.png" alt="Travelly" class="brand-icon" width="72" height="72" />
     <h1>You're Offline</h1>
-    <p>Your internet connection appears to be offline. Reconnect to search and book live accommodations.</p>
+    <p>Your internet connection appears to be offline. Reconnect to search and book live accommodations on Travelly.</p>
     <button class="btn" onclick="window.location.reload()">Retry Connection</button>
   </div>
 </body>

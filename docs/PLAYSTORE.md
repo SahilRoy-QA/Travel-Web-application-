@@ -1,6 +1,6 @@
-# ILLUSION: Google Play Store TWA (Bubblewrap) Deployment Guide
+# Travelly: Google Play Store TWA (Bubblewrap) Deployment Guide
 
-This guide details how to bundle the ILLUSION Progressive Web App into a native Android Application Package (APK) and Android App Bundle (AAB) for Google Play Store publication using the **Bubblewrap CLI** (Trusted Web Activity).
+This guide details how to bundle the Travelly Progressive Web App into a native Android Application Package (APK) and Android App Bundle (AAB) for Google Play Store publication using the **Bubblewrap CLI** (Trusted Web Activity).
 
 ---
 
@@ -33,19 +33,29 @@ bubblewrap init --manifest=https://[YOUR_DEPLOYED_DOMAIN]/manifest.webmanifest
 ```
 
 When prompted by the wizard, enter:
-- **Application ID**: `com.illusion.travel`
-- **App Name**: `ILLUSION Travel & Hotels`
-- **Launcher Name**: `ILLUSION`
+- **Application ID**: `com.travelly.app`
+- **App Name**: `Travelly`
+- **Launcher Name**: `Travelly`
 - **Display Mode**: `standalone`
 - **Status Bar Color (Light)**: `#FFFFFF`
 - **Status Bar Color (Dark)**: `#0B1120` (`themeColorDark` in `twa-manifest.json`)
 - **Navigation Bar Color (Light)**: `#FFFFFF`
 - **Navigation Bar Color (Dark)**: `#0B1120` (`navigationColorDark` in `twa-manifest.json`)
-- **Icon URL**: `https://[YOUR_DEPLOYED_DOMAIN]/pwa-512x512.png`
-- **Maskable Icon URL**: `https://[YOUR_DEPLOYED_DOMAIN]/pwa-maskable-512x512.png`
+- **Icon URL**: `https://[YOUR_DEPLOYED_DOMAIN]/icons/icon-512.png`
+- **Maskable Icon URL**: `https://[YOUR_DEPLOYED_DOMAIN]/icons/maskable-512.png`
+- **Monochrome Icon URL**: Do not set (no monochrome icon provided; Android themed icons will fall back to the default icon).
 - **Start URL**: `/`
 - **Splash Screen Fade-out**: `300ms`
 - **Notifications**: Enabled
+
+### Android Themed Icons & Launcher Icon Caching Rule
+> **IMPORTANT: Launcher Icon is Baked In at Build Time**:
+> Android bakes launcher icons into the compiled APK/AAB during the `bubblewrap build` process. After any icon change:
+> 1. Redeploy the web app with the new icons in `/public/icons/`.
+> 2. Run `bubblewrap update` and then `bubblewrap build`.
+> 3. Increment `appVersionCode` in `twa-manifest.json`.
+> 4. Uninstall any previous build from the device and reinstall the new APK to bypass Android OS launcher icon caching.
+> 5. Note: Since no monochrome icon was provided, `monochromeIconUrl` is not set; Android 13+ themed launcher icons gracefully fall back to the default Travelly adaptive icon.
 
 ### Android TWA Dark Mode & Manifest Trade-Off
 - **Web App Manifest Specification Constraint**: The W3C Web App Manifest spec currently allows only a single static `theme_color` and `background_color`. To ensure the native splash screen never flashes bright white when the user's Android system is set to Dark Mode, `backgroundColor` in `twa-manifest.json` is set to the neutral luxury deep tone `#0B1120`.
@@ -60,7 +70,7 @@ When prompted by the wizard, enter:
 
 Run the following command to generate a production Android release keystore:
 ```bash
-keytool -genkey -v -keystore illusion-keystore.jks -alias illusion-twa -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -keystore travelly-keystore.jks -alias travelly-twa -keyalg RSA -keysize 2048 -validity 10000
 ```
 - Store the keystore and password in a secure password manager.
 - **NEVER commit the keystore or passwords to git.** The `.gitignore` has already been configured to exclude `*.jks`, `*.keystore`, and `android-twa/` secrets.
@@ -94,7 +104,7 @@ For a Trusted Web Activity to render seamlessly without the browser URL bar, Goo
    ```
    Or:
    ```bash
-   keytool -list -v -keystore illusion-keystore.jks -alias illusion-twa
+   keytool -list -v -keystore travelly-keystore.jks -alias travelly-twa
    ```
 2. When you enable **Play App Signing** in Google Play Console (under **Release > Setup > App integrity**), copy Google's **App signing key SHA-256 fingerprint**.
 3. Update `public/.well-known/assetlinks.json` in your repository with **both** SHA-256 fingerprints:
@@ -104,7 +114,7 @@ For a Trusted Web Activity to render seamlessly without the browser URL bar, Goo
        "relation": ["delegate_permission/common.handle_all_urls"],
        "target": {
          "namespace": "android_app",
-         "package_name": "com.illusion.travel",
+         "package_name": "com.travelly.app",
          "sha256_cert_fingerprints": [
            "YOUR_LOCAL_KEYSTORE_SHA256_FINGERPRINT",
            "GOOGLE_PLAY_APP_SIGNING_SHA256_FINGERPRINT"
@@ -125,14 +135,14 @@ For a Trusted Web Activity to render seamlessly without the browser URL bar, Goo
 
 1. **Google Play Developer Account**: Ensure active console account ($25 one-time registration).
 2. **Store Listing Assets**:
-   - App Icon: 512x512 PNG (provided in `/public/pwa-512x512.png`).
-   - Feature Graphic: 1024x500 JPG/PNG.
-   - Phone & Tablet Screenshots: Minimum 2 phone screenshots (portrait 1080x1920 recommended).
+   - **App Store Icon (512x512)**: Upload `/icons/playstore-512.png` (opaque, square corners, 512x512 PNG, designed specifically for Play Store listing). Do NOT use maskable icons for the Play Store listing.
+   - **Feature Graphic**: 1024x500 JPG/PNG.
+   - **Phone & Tablet Screenshots**: Minimum 2 phone screenshots (portrait 1080x1920 recommended).
 3. **Legal URLs**:
-   - Privacy Policy: `https://[YOUR_DOMAIN]/privacy` (live in the ILLUSION app)
-   - Terms of Service: `https://[YOUR_DOMAIN]/terms` (live in the ILLUSION app)
+   - Privacy Policy: `https://[YOUR_DOMAIN]/privacy` (live in the Travelly app)
+   - Terms of Service: `https://[YOUR_DOMAIN]/terms` (live in the Travelly app)
 4. **Data Safety Form**:
-   - ILLUSION collects: Name, Email Address, Phone Number (Account management & booking confirmation), Purchase History (Travel bookings), Device/Network status (offline detection).
+   - Travelly collects: Name, Email Address, Phone Number (Account management & booking confirmation), Purchase History (Travel bookings), Device/Network status (offline detection).
    - Data is encrypted in transit via HTTPS / TLS.
    - Users can delete their data by contacting support.
 5. **Content Rating**: Complete the IARC questionnaire (Travel category: All Ages / Everyone).
