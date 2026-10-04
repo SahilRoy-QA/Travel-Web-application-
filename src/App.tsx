@@ -44,9 +44,9 @@ import { AdminSettings } from './pages/admin/AdminSettings';
 
 // Public Layout Wrapper with Header & Footer
 const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="flex flex-col min-h-screen">
+  <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-hidden">
     <Header />
-    <main className="flex-1">{children}</main>
+    <main className="flex-1 w-full max-w-full overflow-x-hidden">{children}</main>
     <Footer />
   </div>
 );

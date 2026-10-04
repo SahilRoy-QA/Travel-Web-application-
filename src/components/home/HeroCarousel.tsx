@@ -155,24 +155,24 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
           </div>
 
           {/* Bottom Row: Caption Chip & Dot Indicators */}
-          <div className="flex items-end justify-between gap-4 pointer-events-auto">
+          <div className="flex items-end justify-between gap-2 sm:gap-4 pointer-events-auto w-full max-w-full overflow-hidden">
             {/* Optional Caption Chip */}
             {config.showCaptions && currentSlide?.caption ? (
               currentSlide.linkUrl ? (
                 <Link
                   to={currentSlide.linkUrl}
-                  className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/15 text-white text-xs font-semibold shadow-lg transition"
+                  className="group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/15 text-white text-[11px] sm:text-xs font-semibold shadow-lg transition max-w-[140px] sm:max-w-xs"
                 >
-                  <MapPin className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                  <span className="truncate max-w-[180px] sm:max-w-xs">{currentSlide.caption}</span>
-                  <span className="text-[10px] text-sky-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-400 shrink-0" />
+                  <span className="truncate">{currentSlide.caption}</span>
+                  <span className="hidden sm:inline text-[10px] text-sky-300 opacity-0 group-hover:opacity-100 transition-opacity">
                     Explore →
                   </span>
                 </Link>
               ) : (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white text-xs font-semibold shadow-lg">
-                  <MapPin className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                  <span className="truncate max-w-[180px] sm:max-w-xs">{currentSlide.caption}</span>
+                <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white text-[11px] sm:text-xs font-semibold shadow-lg max-w-[140px] sm:max-w-xs">
+                  <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-400 shrink-0" />
+                  <span className="truncate">{currentSlide.caption}</span>
                 </div>
               )
             ) : (
