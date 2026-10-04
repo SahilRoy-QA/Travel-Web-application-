@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Compass,
@@ -27,8 +27,28 @@ export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(e.target as Node)
+      ) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    if (profileDropdownOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [profileDropdownOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -58,7 +78,8 @@ export const Header: React.FC = () => {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors w-full overflow-hidden">
+      {/* Header Container: No overflow-hidden so absolute profile dropdown floats cleanly above hero carousel */}
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors w-full">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
           {/* Brand Logo & Name */}
           <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group min-w-0">
@@ -130,10 +151,13 @@ export const Header: React.FC = () => {
 
             {/* User Profile / Login */}
             {user ? (
-              <div className="relative">
+              <div className="relative z-50" ref={profileDropdownRef}>
                 <button
+                  type="button"
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-1.5 sm:gap-2 p-1 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-850 transition cursor-pointer"
+                  aria-expanded={profileDropdownOpen}
+                  aria-haspopup="true"
                 >
                   <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-sky-600 text-white flex items-center justify-center font-bold text-[11px] sm:text-xs uppercase shadow-xs">
                     {userProfile?.displayName ? userProfile.displayName.charAt(0) : 'U'}
@@ -143,16 +167,20 @@ export const Header: React.FC = () => {
                   </span>
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Dropdown Menu - Floating with high z-index and shadow */}
                 {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
                       <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                        {userProfile?.displayName || 'Guest Traveler'}
+                        {userProfile?.displayName || 'Traveler'}
                       </p>
-                      <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{user.email || 'traveler@travelly.com'}</p>
                       <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-500/10 px-2 py-0.5 rounded-md">
-                        {userProfile?.role || 'Customer'}
+                        {userProfile?.role === 'super_admin'
+                          ? 'Super Admin'
+                          : userProfile?.role === 'admin'
+                          ? 'Administrator'
+                          : 'Traveler'}
                       </span>
                     </div>
 
@@ -163,7 +191,7 @@ export const Header: React.FC = () => {
                         className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400 transition"
                       >
                         <Shield className="w-4 h-4 text-sky-500" />
-                        <span className="font-semibold">Admin Back-Office</span>
+                        <span className="font-semibold">Admin Dashboard</span>
                       </Link>
                     )}
 
@@ -200,6 +228,7 @@ export const Header: React.FC = () => {
                     <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
 
                     <button
+                      type="button"
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 font-medium transition cursor-pointer"
                     >
@@ -210,6 +239,7 @@ export const Header: React.FC = () => {
               </div>
             ) : (
               <button
+                type="button"
                 onClick={() => setAuthModalOpen(true)}
                 className="flex items-center gap-1 bg-sky-600 hover:bg-sky-500 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition cursor-pointer shrink-0"
               >
@@ -220,8 +250,9 @@ export const Header: React.FC = () => {
 
             {/* Mobile Hamburger Toggle */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl"
+              className="md:hidden p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl cursor-pointer"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -302,8 +333,9 @@ export const Header: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-1">
-              <PWAInstallButton variant="banner" />
+            {/* Install App Button in Mobile Drawer */}
+            <div className="pt-2">
+              <PWAInstallButton variant="drawer" />
             </div>
 
             {(isAdmin || isAgent) && (

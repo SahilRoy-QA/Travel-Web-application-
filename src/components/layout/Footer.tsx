@@ -4,19 +4,14 @@ import {
   ChevronDown,
   Mail,
   MapPin,
-  Monitor,
-  Moon,
   Phone,
   ShieldCheck,
-  Sun,
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
-import { useTheme } from '../../context/ThemeContext';
 import { TravelLogo } from '../common/TravelLogo';
 
 export const Footer: React.FC = () => {
   const { branding } = useSettings();
-  const { theme, isDark, setTheme } = useTheme();
 
   // State to track which footer accordion sections are expanded on mobile
   const [openSections, setOpenSections] = useState<Record<number, boolean>>({});
@@ -54,56 +49,6 @@ export const Footer: React.FC = () => {
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
                 <span>{branding.contactEmail}</span>
-              </div>
-            </div>
-
-            {/* Theme Selector Widget in Footer */}
-            <div className="pt-2">
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                Appearance
-              </span>
-              <div className="inline-flex items-center rounded-xl bg-slate-200/80 dark:bg-slate-900 p-1 border border-slate-300/80 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setTheme('light')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    theme === 'light'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                  }`}
-                  title="Light Mode"
-                >
-                  <Sun className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Light</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setTheme('dark')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                  }`}
-                  title="Dark Mode"
-                >
-                  <Moon className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Dark</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setTheme('system')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    theme === 'system'
-                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                  }`}
-                  title="System Theme"
-                >
-                  <Monitor className="w-3.5 h-3.5 text-slate-400" />
-                  <span>System</span>
-                </button>
               </div>
             </div>
           </div>

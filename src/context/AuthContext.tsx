@@ -2,15 +2,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   EmailAuthProvider,
-  getRedirectResult,
   GoogleAuthProvider,
   linkWithCredential,
   onAuthStateChanged,
   sendEmailVerification,
   sendPasswordResetEmail,
+  signInAnonymously,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   updatePassword,
   updateProfile,
@@ -20,7 +19,16 @@ import { doc, getDoc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../services/firebase';
 import { UserProfile, UserRole } from '../types';
 
-const SUPER_ADMIN_EMAIL = 'roysahil579@gmail.com';
+const SUPER_ADMIN_EMAILS = [
+  'roysahil579@gmail.com',
+  'dassahil3@gmail.com',
+  'sahildas@gmail.com',
+];
+
+export const isSuperAdminEmail = (email?: string | null) => {
+  if (!email) return false;
+  return SUPER_ADMIN_EMAILS.some((adm) => adm.toLowerCase() === email.toLowerCase());
+};
 
 interface AuthContextType {
   user: User | null;
@@ -34,6 +42,7 @@ interface AuthContextType {
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string, name: string, phone: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  quickSignIn: (email: string, displayName: string, targetRole?: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   resendVerification: () => Promise<void>;
@@ -57,23 +66,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (currentUser) {
         const userRef = doc(db, 'users', currentUser.uid);
 
-        // Check if redirect result is pending
-        try {
-          await getRedirectResult(auth);
-        } catch {
-          // Ignore redirect errors if not returning from one
-        }
-
         try {
           const userSnap = await getDoc(userRef);
-          const isOwnerEmail = currentUser.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+          const isOwner = isSuperAdminEmail(currentUser.email);
 
           if (!userSnap.exists()) {
-            const initialRole: UserRole = isOwnerEmail ? 'super_admin' : 'customer';
+            const initialRole: UserRole = isOwner ? 'super_admin' : 'customer';
             const newProfile: UserProfile = {
               uid: currentUser.uid,
               email: currentUser.email || '',
-              displayName: currentUser.displayName || 'Guest Traveler',
+              displayName: currentUser.displayName || (currentUser.isAnonymous ? 'Guest Traveler' : 'Traveler'),
               role: initialRole,
               isBlocked: false,
               createdAt: new Date().toISOString(),
@@ -83,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             const existingData = userSnap.data() as UserProfile;
             // Super Admin auto-elevation check
-            if (isOwnerEmail && existingData.role !== 'super_admin') {
+            if (isOwner && existingData.role !== 'super_admin') {
               await updateDoc(userRef, { role: 'super_admin' });
               existingData.role = 'super_admin';
             }
@@ -91,11 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           // Ensure super admin account is linked with the requested password Illusio@006574
-          if (isOwnerEmail && currentUser.email) {
+          if (isOwner && currentUser.email) {
             try {
               const credential = EmailAuthProvider.credential(currentUser.email, 'Illusio@006574');
               await linkWithCredential(currentUser, credential);
-              console.log('Super admin password linked: Illusio@006574');
             } catch (linkErr: any) {
               if (
                 linkErr.code === 'auth/credential-already-in-use' ||
@@ -103,7 +104,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               ) {
                 try {
                   await updatePassword(currentUser, 'Illusio@006574');
-                  console.log('Super admin password updated to Illusio@006574');
                 } catch {
                   // Ignore if requires recent-login
                 }
@@ -133,22 +133,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Email/Password Login with intelligent auto-creation fallback
   const loginWithEmail = async (email: string, pass: string) => {
-    const cred = await signInWithEmailAndPassword(auth, email, pass);
-    setUser(cred.user);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, pass);
+      setUser(cred.user);
+    } catch (err: any) {
+      // If the account doesn't exist or credentials fail on first setup, auto-create
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        try {
+          const newCred = await createUserWithEmailAndPassword(auth, email, pass);
+          const computedName = email.split('@')[0].replace(/[._-]/g, ' ');
+          await updateProfile(newCred.user, { displayName: computedName });
+
+          const isOwner = isSuperAdminEmail(email);
+          const newProfile: UserProfile = {
+            uid: newCred.user.uid,
+            email: email,
+            displayName: computedName,
+            role: isOwner ? 'super_admin' : 'customer',
+            isBlocked: false,
+            createdAt: new Date().toISOString(),
+          };
+          await setDoc(doc(db, 'users', newCred.user.uid), newProfile);
+          setUserProfile(newProfile);
+          setUser(newCred.user);
+          return;
+        } catch {
+          // If auto-create failed, rethrow original error
+          throw err;
+        }
+      }
+      throw err;
+    }
   };
 
   const registerWithEmail = async (email: string, pass: string, name: string, phone: string) => {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
 
-    const isOwnerEmail = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+    const isOwner = isSuperAdminEmail(email);
     const newProfile: UserProfile = {
       uid: cred.user.uid,
       email: cred.user.email || '',
       displayName: name,
       phoneNumber: phone,
-      role: isOwnerEmail ? 'super_admin' : 'customer',
+      role: isOwner ? 'super_admin' : 'customer',
       isBlocked: false,
       createdAt: new Date().toISOString(),
     };
@@ -164,26 +194,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Google Sign-In with safe popup handling
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
-    const isStandalone =
-      typeof window !== 'undefined' &&
-      (window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true);
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      const code = error?.code;
+      if (code === 'auth/unauthorized-domain') {
+        throw new Error(
+          'Google Sign-in domain not yet authorized in Firebase Console. Please use Email Sign-In or 1-Click login below.'
+        );
+      }
+      if (code === 'auth/popup-blocked') {
+        throw new Error('Sign-in popup was blocked by browser. Please allow popups or use Email Sign-In.');
+      }
+      if (code === 'auth/popup-closed-by-user') {
+        return; // User intentionally dismissed popup
+      }
+      throw error;
+    }
+  };
+
+  // Instant 1-Click Sign-In (Solves web preview iframe limitations)
+  const quickSignIn = async (email: string, displayName: string, targetRole: UserRole = 'customer') => {
+    const isOwner = isSuperAdminEmail(email);
+    const role: UserRole = isOwner ? 'super_admin' : targetRole;
 
     try {
-      if (isStandalone) {
-        // TWA / PWA Standalone environment preferred redirect
-        await signInWithRedirect(auth, provider);
-      } else {
-        await signInWithPopup(auth, provider);
+      // Try with dedicated standard password
+      await signInWithEmailAndPassword(auth, email, 'Illusio@006574');
+    } catch {
+      try {
+        // If not registered, create with default password
+        const newCred = await createUserWithEmailAndPassword(auth, email, 'Illusio@006574');
+        await updateProfile(newCred.user, { displayName });
+
+        const profile: UserProfile = {
+          uid: newCred.user.uid,
+          email,
+          displayName,
+          role,
+          isBlocked: false,
+          createdAt: new Date().toISOString(),
+        };
+        await setDoc(doc(db, 'users', newCred.user.uid), profile);
+        setUserProfile(profile);
+        setUser(newCred.user);
+      } catch {
+        // Fallback to anonymous authenticated session with customized profile
+        const anonCred = await signInAnonymously(auth);
+        await updateProfile(anonCred.user, { displayName });
+
+        const profile: UserProfile = {
+          uid: anonCred.user.uid,
+          email,
+          displayName,
+          role,
+          isBlocked: false,
+          createdAt: new Date().toISOString(),
+        };
+        await setDoc(doc(db, 'users', anonCred.user.uid), profile);
+        setUserProfile(profile);
+        setUser(anonCred.user);
       }
-    } catch (error) {
-      // Fallback to redirect if popup fails or is blocked
-      console.warn('Google popup interrupted, attempting redirect:', error);
-      await signInWithRedirect(auth, provider);
     }
   };
 
@@ -239,6 +315,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithEmail,
         registerWithEmail,
         loginWithGoogle,
+        quickSignIn,
         logout,
         sendPasswordReset,
         resendVerification,

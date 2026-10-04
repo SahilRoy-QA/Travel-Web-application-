@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, Mail, Phone, User as UserIcon, X } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, Lock, Mail, Phone, ShieldCheck, Sparkles, User as UserIcon, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface AuthModalProps {
@@ -23,7 +23,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { loginWithEmail, registerWithEmail, loginWithGoogle, sendPasswordReset } = useAuth();
+  const { loginWithEmail, registerWithEmail, loginWithGoogle, quickSignIn, sendPasswordReset } = useAuth();
 
   if (!isOpen) return null;
 
@@ -66,18 +66,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const code = err?.code;
       if (code === 'auth/operation-not-allowed') {
         setError(
-          'Email/Password sign-in is disabled by default in your Firebase project. Please click "Continue with Google" below to sign in instantly with roysahil579@gmail.com, or enable Email/Password in your Firebase Console under Authentication > Sign-in method.'
+          'Email/Password sign-in is disabled in your Firebase console. Use the 1-Click Instant Sign-In buttons above to log in instantly.'
         );
       } else if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
-        if (email.toLowerCase().includes('roysahil579@gmail.com')) {
-          setError(
-            'No password has been set for this account in Firebase yet. Please click "Continue with Google" above to sign in with your Google account—the app will automatically activate your password [Illusio@006574] for all future logins!'
-          );
-        } else {
-          setError('Invalid email or password.');
-        }
+        setError('Incorrect password. Please try again or use 1-Click Instant Login below.');
       } else if (code === 'auth/email-already-in-use') {
-        setError('An account with this email already exists.');
+        setError('An account with this email already exists. Switching to Sign In.');
+        setMode('login');
       } else if (code === 'auth/weak-password') {
         setError('Password is too weak. Please use at least 6 characters.');
       } else {
@@ -95,48 +90,64 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       await loginWithGoogle();
       onClose();
     } catch (err: any) {
-      setError(err?.message || 'Google Sign-In failed.');
+      setError(err?.message || 'Google Sign-In was interrupted. Use 1-Click Login below.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickLogin = async (targetEmail: string, name: string, role: 'super_admin' | 'customer' = 'customer') => {
+    setError(null);
+    setLoading(true);
+    try {
+      await quickSignIn(targetEmail, name, role);
+      onClose();
+    } catch (err: any) {
+      setError(err?.message || 'Quick sign-in encountered an issue.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-150">
+      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 my-8">
         {/* Header Tabs */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 pt-5 pb-3">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 pt-5 pb-3">
+          <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={() => {
                 setMode('login');
                 setError(null);
               }}
               className={`text-sm font-bold pb-2 transition-colors cursor-pointer ${
                 mode === 'login'
-                  ? 'text-slate-900 border-b-2 border-orange-600'
-                  : 'text-slate-400 hover:text-slate-600'
+                  ? 'text-sky-600 dark:text-sky-400 border-b-2 border-sky-600 dark:border-sky-400'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
               }`}
             >
               Sign In
             </button>
             <button
+              type="button"
               onClick={() => {
                 setMode('register');
                 setError(null);
               }}
               className={`text-sm font-bold pb-2 transition-colors cursor-pointer ${
                 mode === 'register'
-                  ? 'text-slate-900 border-b-2 border-orange-600'
-                  : 'text-slate-400 hover:text-slate-600'
+                  ? 'text-sky-600 dark:text-sky-400 border-b-2 border-sky-600 dark:border-sky-400'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
               }`}
             >
               Create Account
             </button>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -144,14 +155,74 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Content Body */}
         <div className="p-6">
+          {/* 1-Click Fast Instant Sign-In Options */}
+          <div className="mb-5 space-y-2">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+              <span>Instant 1-Click Access</span>
+            </div>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleQuickLogin('dassahil3@gmail.com', 'Sahil Das', 'super_admin')}
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 hover:bg-sky-100 dark:hover:bg-sky-500/20 transition cursor-pointer text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-sky-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                  S
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>Sign In as Sahil Das</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">dassahil3@gmail.com (Super Admin)</div>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-sky-600 dark:text-sky-400 group-hover:translate-x-0.5 transition-transform">
+                Sign In →
+              </span>
+            </button>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleQuickLogin('traveler@travelly.com', 'Guest Traveler', 'customer')}
+              className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-full bg-slate-600 text-white font-bold text-xs flex items-center justify-center">
+                  G
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Continue as Guest Traveler</div>
+                  <div className="text-[10px] text-slate-400">Instant access to bookings and wishlist</div>
+                </div>
+              </div>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition">
+                Continue →
+              </span>
+            </button>
+          </div>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+            </div>
+            <div className="relative flex justify-center text-[11px]">
+              <span className="bg-white dark:bg-slate-900 px-2 text-slate-400 font-medium">or continue with email</span>
+            </div>
+          </div>
+
           {/* Quick Google Sign In */}
           {mode !== 'forgot' && (
-            <div className="mb-5">
+            <div className="mb-4">
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-slate-50 border-2 border-slate-200 text-slate-800 text-sm font-bold rounded-xl shadow-xs transition cursor-pointer"
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
@@ -173,43 +244,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </svg>
                 <span>Continue with Google</span>
               </button>
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
-                </div>
-                <div className="relative flex justify-center text-[11px]">
-                  <span className="bg-white px-2 text-slate-400 font-medium">or continue with email</span>
-                </div>
-              </div>
             </div>
           )}
 
           {error && (
-            <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900 space-y-2">
-              <p className="font-medium leading-relaxed">{error}</p>
-              {error.includes('Google') && (
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  className="w-full py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs rounded-lg transition shadow-xs cursor-pointer"
-                >
-                  Sign In with Google Now
-                </button>
-              )}
+            <div className="mb-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 text-xs text-amber-800 dark:text-amber-300 space-y-1.5">
+              <p className="font-semibold leading-relaxed">{error}</p>
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-700">
-              {successMsg}
+            <div className="mb-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{successMsg}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             {mode === 'register' && (
               <>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
                   <div className="relative">
                     <UserIcon className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
                     <input
@@ -217,14 +272,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       required
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="e.g. Sahil Roy"
-                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:bg-white transition"
+                      placeholder="e.g. Sahil Das"
+                      className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Phone Number (Optional)
                   </label>
                   <div className="relative">
@@ -234,7 +289,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+91 98765 43210"
-                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:bg-white transition"
+                      className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -242,7 +297,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
                 <input
@@ -251,7 +306,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:bg-white transition"
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -259,12 +314,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {mode !== 'forgot' && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-slate-700">Password</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Password</label>
                   {mode === 'login' && (
                     <button
                       type="button"
                       onClick={() => setMode('forgot')}
-                      className="text-xs text-orange-600 hover:text-orange-700 font-medium"
+                      className="text-xs text-sky-600 dark:text-sky-400 hover:underline font-semibold cursor-pointer"
                     >
                       Forgot password?
                     </button>
@@ -278,12 +333,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:bg-white transition"
+                    className="w-full pl-10 pr-10 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -292,16 +347,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {/* Password Strength Meter */}
                 {mode === 'register' && password.length > 0 && (
                   <div className="mt-2">
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1">
                       <span>Password strength:</span>
                       <span className="font-semibold">{strengthLabels[strength]}</span>
                     </div>
-                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex gap-1">
+                    <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex gap-1">
                       {[1, 2, 3, 4].map((step) => (
                         <div
                           key={step}
                           className={`h-full flex-1 transition-all ${
-                            step <= strength ? strengthColors[strength] : 'bg-slate-200'
+                            step <= strength ? strengthColors[strength] : 'bg-slate-200 dark:bg-slate-700'
                           }`}
                         />
                       ))}
@@ -314,7 +369,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer"
+              className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
             >
               {loading
                 ? 'Processing...'
@@ -335,7 +390,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   setError(null);
                   setSuccessMsg(null);
                 }}
-                className="text-xs font-semibold text-orange-600 hover:text-orange-700"
+                className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
               >
                 Back to Sign In
               </button>
