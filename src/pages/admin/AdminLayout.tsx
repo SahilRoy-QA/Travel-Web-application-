@@ -110,7 +110,7 @@ export const AdminLayout: React.FC = () => {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <TravelLogo compact isDark={isDark} />
+          <TravelLogo compact />
         </div>
         <div className="flex items-center gap-2">
           <Link to="/" className="text-xs font-bold text-sky-600 dark:text-sky-400">
@@ -129,7 +129,7 @@ export const AdminLayout: React.FC = () => {
           {/* Admin Header Brand */}
           <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800 mb-6">
             <Link to="/admin" className="flex items-center gap-2.5">
-              <TravelLogo isDark={isDark} showTagline={false} />
+              <TravelLogo showTagline={false} />
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}

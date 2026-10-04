@@ -9,17 +9,19 @@ interface ThemeContextType {
   resolvedTheme: 'light' | 'dark';
   isDark: boolean;
   setTheme: (mode: ThemePreference) => void;
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
-const STORAGE_KEY = 'illusion_theme';
+const STORAGE_KEY = 'travelly_theme';
+const LEGACY_STORAGE_KEY = 'illusion_theme';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Initial State from localStorage (or 'system' default)
   const [theme, setThemeState] = useState<ThemePreference>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
+      const saved = (localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)) as ThemePreference | null;
       if (saved === 'light' || saved === 'dark' || saved === 'system') {
         return saved;
       }
@@ -84,22 +86,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     applyBrandThemeVariables(isDark);
   }, [isDark, theme]);
 
-  // 4. Firestore Sync: Listen to current user auth state and apply saved preferences
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        // User logged in; guest preference in localStorage takes precedence if newly set,
-        // or user preferences can be read if not locally customized.
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // 5. Theme Setter: Persists to localStorage and Firestore for logged-in users
+  // 4. Theme Setter: Persists to localStorage and Firestore for logged-in users
   const setTheme = async (mode: ThemePreference) => {
     setThemeState(mode);
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, mode);
+      localStorage.setItem(LEGACY_STORAGE_KEY, mode);
     }
 
     // If user is authenticated, sync to users/{uid}.preferences.theme in Firestore
@@ -123,8 +115,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Toggle between light and dark
+  const toggleTheme = () => {
+    setTheme(isDark ? 'light' : 'dark');
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, isDark, setTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, isDark, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

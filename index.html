@@ -28,7 +28,7 @@
     <script>
       (function() {
         try {
-          var saved = localStorage.getItem('illusion_theme');
+          var saved = localStorage.getItem('travelly_theme') || localStorage.getItem('illusion_theme');
           var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           var isDark = saved === 'dark' || ((!saved || saved === 'system') && systemDark);
           if (isDark) {

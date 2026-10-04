@@ -7,6 +7,7 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { PWAUpdateToast } from './components/common/PWAUpdateToast';
+import { ScrollToTop } from './components/common/ScrollToTop';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ensureInitialSettings } from './services/dbInit';
 
@@ -63,6 +64,7 @@ export default function App() {
         <SettingsProvider>
           <AuthProvider>
             <BrowserRouter>
+            <ScrollToTop />
             <OfflineIndicator />
             <PWAUpdateToast />
 

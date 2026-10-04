@@ -9,10 +9,18 @@ interface TravelLogoProps {
 
 export const TravelLogo: React.FC<TravelLogoProps> = ({
   className = '',
-  isDark = false,
+  isDark,
   showTagline = true,
   compact = false,
 }) => {
+  // If isDark is explicitly passed, honor it; otherwise rely on Tailwind dark: variants
+  const textColorClass =
+    isDark === true
+      ? 'text-white'
+      : isDark === false
+      ? 'text-slate-900'
+      : 'text-slate-900 dark:text-white';
+
   return (
     <div className={`flex items-center gap-2 sm:gap-2.5 select-none shrink-0 ${className}`}>
       {/* Travelly Official Compass + Airplane Brand Symbol */}
@@ -31,9 +39,7 @@ export const TravelLogo: React.FC<TravelLogoProps> = ({
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1 sm:gap-1.5">
             <span
-              className={`text-base sm:text-lg lg:text-xl font-black tracking-tight font-sans ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}
+              className={`text-base sm:text-lg lg:text-xl font-black tracking-tight font-sans transition-colors ${textColorClass}`}
             >
               Travelly
             </span>
@@ -42,7 +48,7 @@ export const TravelLogo: React.FC<TravelLogoProps> = ({
             </span>
           </div>
           {showTagline && (
-            <span className="hidden sm:block text-[10px] font-medium tracking-wide text-slate-400 dark:text-slate-400 -mt-0.5 truncate max-w-[160px]">
+            <span className="hidden sm:block text-[10px] font-medium tracking-wide text-slate-500 dark:text-slate-400 -mt-0.5 truncate max-w-[160px]">
               Your global journey awaits
             </span>
           )}
