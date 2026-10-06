@@ -55,6 +55,7 @@ interface AuthContextType {
   registerWithEmail: (email: string, pass: string, name: string, phone: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   quickSignIn: (email: string, displayName: string, targetRole?: UserRole) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   resendVerification: () => Promise<void>;
@@ -328,6 +329,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Login as a Guest (Anonymous or guest profile)
+  const loginAsGuest = async () => {
+    try {
+      const anonCred = await signInAnonymously(auth);
+      const guestName = 'Guest Traveler';
+      try {
+        await updateProfile(anonCred.user, { displayName: guestName });
+      } catch (pErr) {
+        console.warn('Anonymous profile update notice:', pErr);
+      }
+
+      const profile: UserProfile = {
+        uid: anonCred.user.uid,
+        email: '',
+        displayName: guestName,
+        role: 'customer',
+        isBlocked: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      try {
+        await setDoc(doc(db, 'users', anonCred.user.uid), profile);
+      } catch (dbErr) {
+        console.warn('Anonymous profile write notice:', dbErr);
+      }
+
+      setUserProfile(profile);
+      setUser(anonCred.user);
+    } catch (err) {
+      console.warn('Anonymous sign-in fallback triggered:', err);
+      // Resilient fallback: auto-provision guest session
+      const guestEmail = `guest_${Math.floor(100000 + Math.random() * 900000)}@travelly.guest`;
+      await quickSignIn(guestEmail, 'Guest Traveler', 'customer');
+    }
+  };
+
   const logout = async () => {
     await signOut(auth);
     setUser(null);
@@ -381,6 +418,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         registerWithEmail,
         loginWithGoogle,
         quickSignIn,
+        loginAsGuest,
         logout,
         sendPasswordReset,
         resendVerification,

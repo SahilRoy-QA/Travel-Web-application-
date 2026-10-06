@@ -722,6 +722,26 @@ export const sampleCoupons: Coupon[] = [
     usedCount: 142,
   },
   {
+    id: 'cp_travelly10',
+    code: 'TRAVELLY10',
+    discountType: 'percentage',
+    discountValue: 10,
+    minBookingAmount: 2000,
+    maxDiscount: 2000,
+    isActive: true,
+    usedCount: 520,
+  },
+  {
+    id: 'cp_welcome10',
+    code: 'WELCOME10',
+    discountType: 'percentage',
+    discountValue: 10,
+    minBookingAmount: 1000,
+    maxDiscount: 1500,
+    isActive: true,
+    usedCount: 260,
+  },
+  {
     id: 'cp_illusion10',
     code: 'ILLUSION10',
     discountType: 'percentage',
@@ -739,6 +759,15 @@ export const sampleCoupons: Coupon[] = [
     minBookingAmount: 10000,
     isActive: true,
     usedCount: 79,
+  },
+  {
+    id: 'cp_flat1000',
+    code: 'FLAT1000',
+    discountType: 'flat',
+    discountValue: 1000,
+    minBookingAmount: 5000,
+    isActive: true,
+    usedCount: 110,
   },
 ];
 

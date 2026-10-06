@@ -34,12 +34,13 @@ import {
   Tag,
   User,
   Users,
+  X,
 } from 'lucide-react';
 import { db, cleanFirestoreData } from '../services/firebase';
 import { auth } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
-import { sampleHotels, samplePackages, sampleServices } from '../services/seedData';
+import { sampleHotels, samplePackages, sampleServices, sampleCoupons } from '../services/seedData';
 import { Booking, Coupon, Hotel, RoomType, TourPackage, ServiceItem } from '../types';
 import { AuthModal } from '../components/auth/AuthModal';
 import { initiateRazorpayPayment } from '../services/razorpay';
@@ -82,8 +83,29 @@ export const BookingFlowPage: React.FC = () => {
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>(sampleCoupons);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+
+  // Sync available coupons from Firestore or fallback to sampleCoupons
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'coupons'));
+        if (!snap.empty) {
+          const fetched = snap.docs
+            .map((d) => ({ id: d.id, ...d.data() } as Coupon))
+            .filter((c) => c.isActive !== false);
+          if (fetched.length > 0) {
+            setAvailableCoupons(fetched);
+          }
+        }
+      } catch (err) {
+        console.warn('Coupon list loading notice:', err);
+      }
+    };
+    fetchCoupons();
+  }, []);
 
   // Payment state - Default to Demo Pay or UPI QR for instant testing
   const [paymentMode, setPaymentMode] = useState<'demo_pay' | 'upi_qr' | 'razorpay' | 'pay_later'>('demo_pay');
@@ -187,77 +209,98 @@ export const BookingFlowPage: React.FC = () => {
     loadItem();
   }, [type, itemId, roomId, nights, roomsCount, guestsCount]);
 
-  // Handle promo code application
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;
+  // Robust promo code application by code string
+  const applyCouponByCode = async (rawCode: string) => {
+    if (!rawCode || !rawCode.trim()) {
+      setCouponError('Please enter a coupon code.');
+      return;
+    }
     setCouponError(null);
     setCouponSuccess(null);
 
-    const codeUpper = couponCode.trim().toUpperCase();
+    const codeUpper = rawCode.trim().toUpperCase();
 
-    try {
-      const q = query(collection(db, 'coupons'), where('code', '==', codeUpper), where('isActive', '==', true));
-      const snap = await getDocs(q);
+    // 1. Check in available list or sample coupons first
+    let targetCoupon: Coupon | null =
+      [...availableCoupons, ...sampleCoupons].find(
+        (c) => c.code.toUpperCase() === codeUpper && c.isActive !== false
+      ) || null;
 
-      if (snap.empty) {
-        // Fallback demo coupon codes
-        if (codeUpper === 'WELCOME10') {
-          setAppliedCoupon({
-            id: 'local_cp1',
-            code: 'WELCOME10',
-            discountType: 'percentage',
-            discountValue: 10,
-            minBookingAmount: 1000,
-            maxDiscount: 1500,
-            isActive: true,
-            usedCount: 1,
-          });
-          setCouponSuccess('Promo code WELCOME10 applied! 10% discount added.');
-          return;
+    // 2. Query Firestore if not already found in memory
+    if (!targetCoupon) {
+      try {
+        const q = query(collection(db, 'coupons'), where('code', '==', codeUpper));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const cp = { id: snap.docs[0].id, ...snap.docs[0].data() } as Coupon;
+          if (cp.isActive !== false) {
+            targetCoupon = cp;
+          }
         }
-        if (codeUpper === 'SUMMER2026' && basePrice >= 10000) {
-          setAppliedCoupon({
-            id: 'local_cp3',
-            code: 'SUMMER2026',
-            discountType: 'flat',
-            discountValue: 1500,
-            minBookingAmount: 10000,
-            isActive: true,
-            usedCount: 1,
-          });
-          setCouponSuccess('Promo code SUMMER2026 applied! ₹1,500 discount added.');
-          return;
-        }
-        setCouponError('Invalid or expired coupon code.');
-        return;
+      } catch (err) {
+        console.warn('Coupon lookup notice:', err);
       }
-
-      const cpData = { id: snap.docs[0].id, ...snap.docs[0].data() } as Coupon;
-      if (basePrice < cpData.minBookingAmount) {
-        setCouponError(`Minimum booking amount of ₹${cpData.minBookingAmount} required for this coupon.`);
-        return;
-      }
-
-      setAppliedCoupon(cpData);
-      setCouponSuccess(`Promo code ${cpData.code} applied successfully!`);
-    } catch {
-      setCouponError('Failed to validate coupon code.');
     }
+
+    if (!targetCoupon) {
+      setCouponError(`Invalid or expired code "${codeUpper}". Try WELCOME500 or TRAVELLY10.`);
+      return;
+    }
+
+    const minReq = Number(targetCoupon.minBookingAmount) || 0;
+    if (basePrice < minReq) {
+      setCouponError(
+        `Minimum booking fare of ${policies.currencySymbol}${minReq.toLocaleString()} required for ${targetCoupon.code} (Current fare: ${policies.currencySymbol}${basePrice.toLocaleString()}).`
+      );
+      return;
+    }
+
+    setAppliedCoupon(targetCoupon);
+    setCouponCode(targetCoupon.code);
+
+    const val = Number(targetCoupon.discountValue) || 0;
+    let disc = 0;
+    if (targetCoupon.discountType === 'flat') {
+      disc = Math.min(val, basePrice);
+    } else {
+      const pct = (basePrice * val) / 100;
+      const maxD = targetCoupon.maxDiscount ? Number(targetCoupon.maxDiscount) : Infinity;
+      disc = Math.min(Math.min(pct, maxD), basePrice);
+    }
+    disc = Math.round(disc);
+
+    setCouponSuccess(
+      `Coupon ${targetCoupon.code} applied! Saved ${policies.currencySymbol}${disc.toLocaleString()} on your trip.`
+    );
   };
 
-  // Discount calculation
+  const handleApplyCoupon = () => {
+    applyCouponByCode(couponCode);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponSuccess(null);
+    setCouponError(null);
+  };
+
+  // Discount calculation safely typed and verified
   let discountAmount = 0;
-  if (appliedCoupon) {
+  if (appliedCoupon && basePrice > 0) {
+    const val = Number(appliedCoupon.discountValue) || 0;
     if (appliedCoupon.discountType === 'flat') {
-      discountAmount = appliedCoupon.discountValue;
+      discountAmount = Math.min(val, basePrice);
     } else {
-      const pct = (basePrice * appliedCoupon.discountValue) / 100;
-      discountAmount = appliedCoupon.maxDiscount ? Math.min(pct, appliedCoupon.maxDiscount) : pct;
+      const pct = (basePrice * val) / 100;
+      const maxD = appliedCoupon.maxDiscount ? Number(appliedCoupon.maxDiscount) : Infinity;
+      discountAmount = Math.min(Math.min(pct, maxD), basePrice);
     }
+    discountAmount = Math.round(discountAmount);
   }
 
   const taxableAmount = Math.max(0, basePrice - discountAmount);
-  const taxes = Math.round((taxableAmount * policies.standardTaxPercent) / 100);
+  const taxes = Math.round((taxableAmount * (policies?.standardTaxPercent || 18)) / 100);
   const finalTotal = taxableAmount + taxes;
 
   // Real UPI Intent URI formatted for GPay / PhonePe / Paytm / BHIM
@@ -663,35 +706,136 @@ export const BookingFlowPage: React.FC = () => {
             </div>
 
             {/* Promo Code Box */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                <span>Have a Promo Code?</span>
+                <span>Promo Code & Coupons</span>
               </span>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. WELCOME10 or SUMMER2026"
-                  className="flex-1 p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs uppercase font-bold text-slate-900 dark:text-white"
-                />
-                <button
-                  type="button"
-                  onClick={handleApplyCoupon}
-                  className="px-4 py-2.5 bg-slate-900 dark:bg-sky-600 hover:bg-slate-800 dark:hover:bg-sky-500 text-white font-bold text-xs rounded-xl transition cursor-pointer"
-                >
-                  Apply
-                </button>
-              </div>
 
-              {couponError && <p className="text-xs text-red-600 dark:text-red-400 font-medium">{couponError}</p>}
-              {couponSuccess && (
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-3.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 rounded-xl">
+                  <div className="flex items-center gap-2.5">
+                    <span className="px-2.5 py-1 bg-emerald-600 text-white font-mono font-black text-xs rounded-lg uppercase tracking-wider shadow-xs">
+                      {appliedCoupon.code}
+                    </span>
+                    <div>
+                      <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                        Coupon Applied Successfully!
+                      </p>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                        Discount of {policies.currencySymbol}{discountAmount.toLocaleString()} calculated & applied
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-slate-800 text-red-600 hover:text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg text-xs font-bold transition cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    applyCouponByCode(couponCode);
+                  }}
+                  className="flex gap-2"
+                >
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Enter coupon code (e.g. WELCOME500, TRAVELLY10)"
+                    className="flex-1 p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs uppercase font-bold text-slate-900 dark:text-white placeholder:normal-case placeholder:font-normal focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                  />
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-xs"
+                  >
+                    Apply Code
+                  </button>
+                </form>
+              )}
+
+              {couponError && (
+                <div className="p-2.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{couponError}</span>
+                </div>
+              )}
+              {couponSuccess && !appliedCoupon && (
                 <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                   <Check className="w-3.5 h-3.5" />
                   <span>{couponSuccess}</span>
                 </p>
               )}
+
+              {/* Available Coupons Grid */}
+              <div className="pt-2">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2.5">
+                  Available Offers for This Booking
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {availableCoupons.map((cp) => {
+                    const minAmount = Number(cp.minBookingAmount) || 0;
+                    const isEligible = basePrice >= minAmount;
+                    const isCurrent = appliedCoupon?.code === cp.code;
+
+                    return (
+                      <div
+                        key={cp.id}
+                        className={`p-3 rounded-xl border text-xs flex flex-col justify-between transition-all ${
+                          isCurrent
+                            ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 ring-1 ring-emerald-500'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-sky-300 dark:hover:border-sky-700 shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span className="font-mono font-black text-slate-900 dark:text-white tracking-wider text-xs">
+                            {cp.code}
+                          </span>
+                          <span className="text-[10px] font-extrabold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/60 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-900">
+                            {cp.discountType === 'percentage'
+                              ? `${cp.discountValue}% OFF`
+                              : `FLAT ${policies.currencySymbol}${cp.discountValue} OFF`}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+                          {minAmount > 0
+                            ? `Min fare: ${policies.currencySymbol}${minAmount.toLocaleString()}`
+                            : 'No minimum booking required'}
+                          {cp.maxDiscount
+                            ? ` • Max save: ${policies.currencySymbol}${Number(cp.maxDiscount).toLocaleString()}`
+                            : ''}
+                        </p>
+                        <div className="pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                          {isCurrent ? (
+                            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5" /> Applied
+                            </span>
+                          ) : isEligible ? (
+                            <button
+                              type="button"
+                              onClick={() => applyCouponByCode(cp.code)}
+                              className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                              <span>Apply Coupon</span>
+                              <span>→</span>
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                              Add {policies.currencySymbol}{(minAmount - basePrice).toLocaleString()} more to unlock
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Price Breakdown */}
@@ -704,11 +848,20 @@ export const BookingFlowPage: React.FC = () => {
                 </span>
               </div>
               {discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
-                  <span>Coupon Discount</span>
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+                  <span>Coupon Discount ({appliedCoupon?.code})</span>
                   <span>
                     - {policies.currencySymbol}
                     {discountAmount.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-slate-500 dark:text-slate-400 text-[11px]">
+                  <span>Taxable Amount</span>
+                  <span>
+                    {policies.currencySymbol}
+                    {taxableAmount.toLocaleString()}
                   </span>
                 </div>
               )}
@@ -719,12 +872,27 @@ export const BookingFlowPage: React.FC = () => {
                   {taxes.toLocaleString()}
                 </span>
               </div>
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between text-sm font-extrabold text-slate-900 dark:text-white">
-                <span>Grand Total</span>
-                <span className="text-sky-600 dark:text-sky-400 text-base">
-                  {policies.currencySymbol}
-                  {finalTotal.toLocaleString()}
-                </span>
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between items-baseline text-sm font-extrabold text-slate-900 dark:text-white">
+                <div>
+                  <span>Grand Total</span>
+                  {discountAmount > 0 && (
+                    <span className="text-[11px] block font-semibold text-emerald-600 dark:text-emerald-400">
+                      Total savings: {policies.currencySymbol}{discountAmount.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                <div className="text-right">
+                  {discountAmount > 0 && (
+                    <span className="text-xs text-slate-400 line-through mr-2 font-normal">
+                      {policies.currencySymbol}
+                      {(basePrice + Math.round((basePrice * policies.standardTaxPercent) / 100)).toLocaleString()}
+                    </span>
+                  )}
+                  <span className="text-sky-600 dark:text-sky-400 text-lg">
+                    {policies.currencySymbol}
+                    {finalTotal.toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -761,6 +929,27 @@ export const BookingFlowPage: React.FC = () => {
               <span className="text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">
                 Step 4 of 4
               </span>
+            </div>
+
+            {/* Payable Summary Banner */}
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Payable Amount:</span>
+                <span className="text-base font-black text-slate-900 dark:text-white">
+                  {policies.currencySymbol}{finalTotal.toLocaleString()}
+                </span>
+                {discountAmount > 0 && (
+                  <span className="text-xs text-slate-400 line-through">
+                    {policies.currencySymbol}{(basePrice + Math.round((basePrice * policies.standardTaxPercent) / 100)).toLocaleString()}
+                  </span>
+                )}
+              </div>
+              {discountAmount > 0 && appliedCoupon && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  <Tag className="w-3.5 h-3.5" />
+                  <span>{appliedCoupon.code} applied (-{policies.currencySymbol}{discountAmount.toLocaleString()})</span>
+                </div>
+              )}
             </div>
 
             {/* Payment Method Selector Grid */}

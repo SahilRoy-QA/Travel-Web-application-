@@ -32,6 +32,21 @@ export async function ensureInitialSettings() {
       await setDoc(doc(db, 'settings', 'policies'), defaultPolicies);
       console.log('Default settings seeded to Firestore.');
     }
+
+    // Ensure core coupons exist in Firestore
+    try {
+      const couponsSnap = await getDocs(collection(db, 'coupons'));
+      if (couponsSnap.empty) {
+        for (const cp of sampleCoupons) {
+          await setDoc(doc(db, 'coupons', cp.id), {
+            ...cp,
+            createdAt: new Date().toISOString(),
+          });
+        }
+      }
+    } catch {
+      // Ignore if offline or read-only
+    }
   } catch (error) {
     console.warn('Initial settings check skipped or offline:', error);
   }
