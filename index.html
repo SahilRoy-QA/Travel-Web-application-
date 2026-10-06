@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Travelly - Travel & Hotel Booking Platform</title>
-    <meta name="description" content="Discover luxury stays, hotels, and holiday tour packages on Travelly with live availability, instant confirmation, and seamless booking." />
+    <title>ILLUSION - Travel & Hotel Booking Platform</title>
+    <meta name="description" content="Discover luxury stays, hotels, and holiday tour packages on ILLUSION with live availability, instant confirmation, and seamless booking." />
 
     <!-- Two <meta name="theme-color"> tags with media queries for seamless PWA & browser chrome support -->
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" id="meta-theme-color-light" />
@@ -19,10 +19,25 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta property="og:title" content="Travelly - Travel & Hotel Booking Platform" />
-    <meta property="og:description" content="Discover luxury stays, hotels, and holiday tour packages on Travelly with live availability, instant confirmation, and seamless booking." />
+    <meta property="og:title" content="ILLUSION - Travel & Hotel Booking Platform" />
+    <meta property="og:description" content="Discover luxury stays, hotels, and holiday tour packages on ILLUSION with live availability, instant confirmation, and seamless booking." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Anti-Crash & Stale Service Worker Cleaner: Unregisters stale SW in dev/preview to prevent white screen -->
+    <script>
+      (function() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            for (var i = 0; i < regs.length; i++) {
+              if (window.location.port === '3000' || window.location.hostname.includes('run.app')) {
+                regs[i].unregister();
+              }
+            }
+          }).catch(function() {});
+        }
+      })();
+    </script>
 
     <!-- Anti-Flash Theme Initializer: Runs synchronously before React renders -->
     <script>
@@ -43,7 +58,27 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Branded Initial Loader & White Screen Recovery Fallback -->
+      <div id="initial-loader" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0b1120; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; padding: 24px; text-align: center;">
+        <div style="width: 44px; height: 44px; border: 3px solid rgba(56, 189, 248, 0.2); border-top-color: #38bdf8; border-radius: 50%; animation: spin-loader 0.8s linear infinite;"></div>
+        <p style="margin-top: 16px; font-weight: 700; font-size: 15px; color: #e2e8f0; letter-spacing: -0.01em;">Travelly</p>
+        <p style="margin-top: 4px; font-size: 12px; color: #94a3b8;">Loading your travel platform...</p>
+        <style>@keyframes spin-loader { to { transform: rotate(360deg); } }</style>
+        <div id="loader-fallback-btn" style="display: none; margin-top: 24px;">
+          <p style="font-size: 12px; color: #94a3b8; margin-bottom: 12px;">Taking a moment to connect?</p>
+          <button type="button" onclick="try { localStorage.removeItem('illusion_carousel_slides_v1'); localStorage.removeItem('illusion_carousel_config_v1'); } catch(e){} window.location.reload();" style="padding: 10px 22px; background-color: #0284c7; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">
+            Reload Platform
+          </button>
+        </div>
+      </div>
+      <script>
+        setTimeout(function() {
+          var fb = document.getElementById('loader-fallback-btn');
+          if (fb) fb.style.display = 'block';
+        }, 3000);
+      </script>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

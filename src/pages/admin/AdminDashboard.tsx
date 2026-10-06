@@ -221,7 +221,7 @@ export const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="py-3 px-2 truncate max-w-[180px]">{b.itemTitle}</td>
                     <td className="py-3 px-2 font-bold text-white">
-                      {policies.currencySymbol}{b.totalAmount.toLocaleString()}
+                      {policies.currencySymbol}{(b.totalAmount ?? 0).toLocaleString()}
                     </td>
                     <td className="py-3 px-2 capitalize">
                       <span className="text-[10px] bg-slate-900 px-2 py-0.5 rounded-md">

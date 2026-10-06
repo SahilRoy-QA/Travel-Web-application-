@@ -112,11 +112,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           // Live listener for profile changes (role upgrade, block status, etc.)
-          unsubProfile = onSnapshot(userRef, (snapshot) => {
-            if (snapshot.exists()) {
-              setUserProfile(snapshot.data() as UserProfile);
+          unsubProfile = onSnapshot(
+            userRef,
+            (snapshot) => {
+              if (snapshot.exists()) {
+                setUserProfile(snapshot.data() as UserProfile);
+              }
+            },
+            (error) => {
+              console.warn('Profile listener notice:', error.message);
             }
-          });
+          );
         } catch (err) {
           console.warn('Error fetching user profile:', err);
         }

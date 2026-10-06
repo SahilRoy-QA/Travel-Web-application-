@@ -6,7 +6,8 @@ export const PWAUpdateToast: React.FC = () => {
   const [updateSW, setUpdateSW] = useState<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    // Only register service worker in production builds to prevent dev-server cache conflicts
+    if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       import('virtual:pwa-register')
         .then(({ registerSW }) => {
           const update = registerSW({

@@ -167,9 +167,12 @@ export interface Booking {
   discountAmount: number;
   couponCode?: string;
   totalAmount: number;
-  paymentMode: 'pay_later' | 'online';
+  paymentMode: 'pay_later' | 'online' | 'razorpay' | 'upi_qr' | 'demo_pay';
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
   bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  razorpayPaymentId?: string;
+  upiTransactionId?: string;
+  paymentMethodDetails?: string;
   cancellationReason?: string;
   refundAmount?: number;
   refundStatus?: 'none' | 'requested' | 'processed';

@@ -221,7 +221,7 @@ export const MyTripsPage: React.FC = () => {
 
                     <div className="text-xs pt-1">
                       <span className="font-bold text-slate-900 dark:text-white">
-                        {policies.currencySymbol}{b.totalAmount.toLocaleString()}
+                        {policies.currencySymbol}{(b.totalAmount ?? 0).toLocaleString()}
                       </span>
                       <span className="text-slate-400 text-[11px] ml-1">
                         ({b.paymentMode === 'pay_later' ? 'Pay upon arrival' : 'Paid online'})

@@ -205,7 +205,7 @@ export const AdminBookings: React.FC = () => {
                       {b.checkOutDate && <p className="text-[10px] text-slate-400">to {b.checkOutDate}</p>}
                     </td>
                     <td className="py-4 px-4 font-black text-white whitespace-nowrap">
-                      {policies.currencySymbol}{b.totalAmount.toLocaleString()}
+                      {policies.currencySymbol}{(b.totalAmount ?? 0).toLocaleString()}
                     </td>
                     <td className="py-4 px-4 whitespace-nowrap">
                       <span className="text-[10px] bg-slate-900 px-2 py-0.5 rounded-md block w-fit">
