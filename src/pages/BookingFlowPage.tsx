@@ -578,7 +578,7 @@ export const BookingFlowPage: React.FC = () => {
                   required
                   value={primaryName}
                   onChange={(e) => setPrimaryName(e.target.value)}
-                  placeholder="e.g. Sahil Das"
+                  placeholder="e.g. Test_User_1"
                   className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white"
                 />
               </div>

@@ -30,6 +30,18 @@ export const isSuperAdminEmail = (email?: string | null) => {
   return SUPER_ADMIN_EMAILS.some((adm) => adm.toLowerCase() === email.toLowerCase());
 };
 
+export const getDefaultDisplayNameForEmail = (email?: string | null, fallback?: string): string => {
+  if (!email) return fallback || 'Traveler';
+  const lower = email.toLowerCase().trim();
+  if (lower === 'dassahil3@gmail.com' || lower === 'sahildas@gmail.com') {
+    return 'Test_User_1';
+  }
+  if (lower === 'roysahil579@gmail.com') {
+    return 'Dev_Lead';
+  }
+  return fallback || email.split('@')[0].replace(/[._-]/g, ' ');
+};
+
 interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
@@ -69,13 +81,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const userSnap = await getDoc(userRef);
           const isOwner = isSuperAdminEmail(currentUser.email);
+          const lowerEmail = currentUser.email?.toLowerCase().trim() || '';
+
+          // Determine expected display name for specific accounts
+          let designatedName = currentUser.displayName;
+          if (lowerEmail === 'dassahil3@gmail.com' || lowerEmail === 'sahildas@gmail.com') {
+            designatedName = 'Test_User_1';
+          } else if (lowerEmail === 'roysahil579@gmail.com') {
+            designatedName = 'Dev_Lead';
+          } else if (!designatedName) {
+            designatedName = currentUser.isAnonymous ? 'Guest Traveler' : 'Traveler';
+          }
+
+          // If the auth profile has a different name than designated for designated emails, update it
+          if (
+            (lowerEmail === 'dassahil3@gmail.com' ||
+              lowerEmail === 'sahildas@gmail.com' ||
+              lowerEmail === 'roysahil579@gmail.com') &&
+            currentUser.displayName !== designatedName
+          ) {
+            try {
+              await updateProfile(currentUser, { displayName: designatedName });
+            } catch (pErr) {
+              console.warn('Could not update currentUser auth profile:', pErr);
+            }
+          }
 
           if (!userSnap.exists()) {
             const initialRole: UserRole = isOwner ? 'super_admin' : 'customer';
             const newProfile: UserProfile = {
               uid: currentUser.uid,
               email: currentUser.email || '',
-              displayName: currentUser.displayName || (currentUser.isAnonymous ? 'Guest Traveler' : 'Traveler'),
+              displayName: designatedName,
               role: initialRole,
               isBlocked: false,
               createdAt: new Date().toISOString(),
@@ -84,10 +121,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserProfile(newProfile);
           } else {
             const existingData = userSnap.data() as UserProfile;
+            let needsDocUpdate = false;
+            const updatePayload: Partial<UserProfile> = {};
+
             // Super Admin auto-elevation check
             if (isOwner && existingData.role !== 'super_admin') {
-              await updateDoc(userRef, { role: 'super_admin' });
               existingData.role = 'super_admin';
+              updatePayload.role = 'super_admin';
+              needsDocUpdate = true;
+            }
+
+            // Enforce Test_User_1 for dassahil3@gmail.com and Dev_Lead for roysahil579@gmail.com
+            if (
+              (lowerEmail === 'dassahil3@gmail.com' ||
+                lowerEmail === 'sahildas@gmail.com' ||
+                lowerEmail === 'roysahil579@gmail.com') &&
+              existingData.displayName !== designatedName
+            ) {
+              existingData.displayName = designatedName;
+              updatePayload.displayName = designatedName;
+              needsDocUpdate = true;
+            }
+
+            if (needsDocUpdate) {
+              await updateDoc(userRef, updatePayload);
             }
             setUserProfile(existingData);
           }
@@ -149,7 +206,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         try {
           const newCred = await createUserWithEmailAndPassword(auth, email, pass);
-          const computedName = email.split('@')[0].replace(/[._-]/g, ' ');
+          const computedName = getDefaultDisplayNameForEmail(email);
           await updateProfile(newCred.user, { displayName: computedName });
 
           const isOwner = isSuperAdminEmail(email);
@@ -176,13 +233,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const registerWithEmail = async (email: string, pass: string, name: string, phone: string) => {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(cred.user, { displayName: name });
+    const resolvedName = getDefaultDisplayNameForEmail(email, name);
+    await updateProfile(cred.user, { displayName: resolvedName });
 
     const isOwner = isSuperAdminEmail(email);
     const newProfile: UserProfile = {
       uid: cred.user.uid,
       email: cred.user.email || '',
-      displayName: name,
+      displayName: resolvedName,
       phoneNumber: phone,
       role: isOwner ? 'super_admin' : 'customer',
       isBlocked: false,
@@ -225,9 +283,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Instant 1-Click Sign-In (Solves web preview iframe limitations)
-  const quickSignIn = async (email: string, displayName: string, targetRole: UserRole = 'customer') => {
+  const quickSignIn = async (email: string, displayName?: string, targetRole: UserRole = 'customer') => {
     const isOwner = isSuperAdminEmail(email);
     const role: UserRole = isOwner ? 'super_admin' : targetRole;
+    const resolvedName = getDefaultDisplayNameForEmail(email, displayName);
 
     try {
       // Try with dedicated standard password
@@ -236,12 +295,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         // If not registered, create with default password
         const newCred = await createUserWithEmailAndPassword(auth, email, 'Illusio@006574');
-        await updateProfile(newCred.user, { displayName });
+        await updateProfile(newCred.user, { displayName: resolvedName });
 
         const profile: UserProfile = {
           uid: newCred.user.uid,
           email,
-          displayName,
+          displayName: resolvedName,
           role,
           isBlocked: false,
           createdAt: new Date().toISOString(),
@@ -252,12 +311,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch {
         // Fallback to anonymous authenticated session with customized profile
         const anonCred = await signInAnonymously(auth);
-        await updateProfile(anonCred.user, { displayName });
+        await updateProfile(anonCred.user, { displayName: resolvedName });
 
         const profile: UserProfile = {
           uid: anonCred.user.uid,
           email,
-          displayName,
+          displayName: resolvedName,
           role,
           isBlocked: false,
           createdAt: new Date().toISOString(),
