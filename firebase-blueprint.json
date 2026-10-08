@@ -9,7 +9,7 @@
         "email": { "type": "string", "format": "email", "maxLength": 256 },
         "displayName": { "type": "string", "maxLength": 120 },
         "phoneNumber": { "type": "string", "maxLength": 30 },
-        "role": { "type": "string", "enum": ["customer", "agent", "admin", "super_admin"] },
+        "role": { "type": "string", "enum": ["customer", "agent", "admin", "super_admin", "driver"] },
         "isBlocked": { "type": "boolean" },
         "preferences": {
           "type": "object",
@@ -219,6 +219,171 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["altText", "order", "active"]
+    },
+    "CabBooking": {
+      "title": "Cab Booking",
+      "description": "Customer cab trip reservation across airport, point to point, rental, or outstation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "bookingNumber": { "type": "string", "maxLength": 64 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 120 },
+        "customerPhone": { "type": "string", "maxLength": 30 },
+        "customerEmail": { "type": "string", "maxLength": 256 },
+        "tripType": { "type": "string", "enum": ["airport", "point_to_point", "rental", "outstation_one_way", "outstation_round_trip"] },
+        "vehicleType": { "type": "string", "enum": ["hatchback", "sedan", "suv", "premium_suv", "tempo_traveller"] },
+        "pickupAddress": { "type": "string", "maxLength": 500 },
+        "dropAddress": { "type": "string", "maxLength": 500 },
+        "pickupDateTime": { "type": "string", "format": "date-time" },
+        "returnDateTime": { "type": "string", "format": "date-time" },
+        "isImmediate": { "type": "boolean" },
+        "passengersCount": { "type": "number" },
+        "luggageCount": { "type": "number" },
+        "flightNumber": { "type": "string", "maxLength": 30 },
+        "specialInstructions": { "type": "string", "maxLength": 1000 },
+        "otp": { "type": "string", "maxLength": 10 },
+        "status": { "type": "string", "enum": ["requested", "confirmed", "driver_assigned", "driver_arriving", "trip_started", "completed", "cancelled"] },
+        "driverId": { "type": "string", "maxLength": 128 },
+        "driverName": { "type": "string", "maxLength": 120 },
+        "driverPhone": { "type": "string", "maxLength": 30 },
+        "vehicleId": { "type": "string", "maxLength": 128 },
+        "vehicleRegistrationNumber": { "type": "string", "maxLength": 30 },
+        "fareBreakdown": { "type": "object" },
+        "fareConfigVersion": { "type": "string", "maxLength": 30 },
+        "paymentMode": { "type": "string", "enum": ["pay_now", "advance_20", "pay_to_driver"] },
+        "paymentStatus": { "type": "string", "enum": ["pending", "advance_paid", "paid", "refunded"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["bookingNumber", "userId", "tripType", "vehicleType", "pickupAddress", "dropAddress", "pickupDateTime", "status", "fareBreakdown"]
+    },
+    "CabVehicle": {
+      "title": "Cab Fleet Vehicle",
+      "description": "Fleet vehicle record with document expiries, status, and driver assignment.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 120 },
+        "model": { "type": "string", "maxLength": 120 },
+        "vehicleType": { "type": "string", "enum": ["hatchback", "sedan", "suv", "premium_suv", "tempo_traveller"] },
+        "registrationNumber": { "type": "string", "maxLength": 30 },
+        "seatingCapacity": { "type": "number" },
+        "luggageCapacity": { "type": "number" },
+        "hasAC": { "type": "boolean" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "maintenance", "inactive"] },
+        "currentDriverId": { "type": "string", "maxLength": 128 },
+        "rating": { "type": "number" },
+        "totalTrips": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "model", "vehicleType", "registrationNumber", "status"]
+    },
+    "Driver": {
+      "title": "Cab Driver",
+      "description": "Onboarded driver profile, KYC status, and performance metrics.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 120 },
+        "phoneNumber": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "format": "email", "maxLength": 256 },
+        "licenceNumber": { "type": "string", "maxLength": 50 },
+        "licenceExpiry": { "type": "string" },
+        "kycStatus": { "type": "string", "enum": ["pending", "verified", "rejected"] },
+        "status": { "type": "string", "enum": ["online", "offline", "on_trip", "suspended"] },
+        "assignedVehicleId": { "type": "string", "maxLength": 128 },
+        "commissionPercent": { "type": "number" },
+        "rating": { "type": "number" },
+        "totalTrips": { "type": "number" },
+        "lifetimeEarnings": { "type": "number" },
+        "pendingPayout": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName", "phoneNumber", "licenceNumber", "kycStatus", "status"]
+    },
+    "FareConfig": {
+      "title": "Cab Fare Configuration",
+      "description": "Admin configurable fare rules, rates per vehicle, surge pricing, and cancellation slabs.",
+      "type": "object",
+      "properties": {
+        "version": { "type": "string", "maxLength": 30 },
+        "currencySymbol": { "type": "string", "maxLength": 10 },
+        "gstPercent": { "type": "number" },
+        "ratesByVehicle": { "type": "object" },
+        "rentalPackages": { "type": "array" },
+        "airportZones": { "type": "array" },
+        "cancellationSlabs": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["version", "ratesByVehicle"]
+    },
+    "CabZone": {
+      "title": "Cab Operating Zone",
+      "description": "Geographical operating zone or airport flat fare boundary.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 120 },
+        "code": { "type": "string", "maxLength": 50 },
+        "city": { "type": "string", "maxLength": 100 },
+        "type": { "type": "string", "enum": ["airport", "city", "outstation"] },
+        "isActive": { "type": "boolean" },
+        "airportFlatRates": { "type": "object" }
+      },
+      "required": ["name", "code", "city", "type", "isActive"]
+    },
+    "CabReview": {
+      "title": "Cab & Driver Review",
+      "description": "Customer ratings and feedback for completed cab rides.",
+      "type": "object",
+      "properties": {
+        "bookingId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 120 },
+        "driverId": { "type": "string", "maxLength": 128 },
+        "vehicleId": { "type": "string", "maxLength": 128 },
+        "driverRating": { "type": "number" },
+        "vehicleRating": { "type": "number" },
+        "comment": { "type": "string", "maxLength": 2000 },
+        "isApproved": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["bookingId", "userId", "driverId", "driverRating"]
+    },
+    "DriverLocation": {
+      "title": "Live Driver Location",
+      "description": "Real-time GPS coordinate telemetry for dispatch and tracking.",
+      "type": "object",
+      "properties": {
+        "driverId": { "type": "string", "maxLength": 128 },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "heading": { "type": "number" },
+        "speed": { "type": "number" },
+        "isOnline": { "type": "boolean" },
+        "activeBookingId": { "type": "string", "maxLength": 128 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["driverId", "lat", "lng", "isOnline", "updatedAt"]
+    },
+    "CabTransaction": {
+      "title": "Cab Financial Transaction",
+      "description": "Ledger entry for advance, cash, commission, and driver payouts.",
+      "type": "object",
+      "properties": {
+        "bookingId": { "type": "string", "maxLength": 128 },
+        "driverId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["advance_payment", "full_payment", "driver_cash", "commission_deduction", "driver_payout", "refund"] },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "paymentReference": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "type", "status"]
     }
   },
   "firestore": {
@@ -273,6 +438,38 @@
     "/heroCarousel/slides/items/{slideId}": {
       "schema": { "$ref": "#/entities/HeroCarouselSlide" },
       "description": "Individual hero photo carousel slides"
+    },
+    "/cabBookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/CabBooking" },
+      "description": "Cab reservations and live ride orders"
+    },
+    "/cabVehicles/{vehicleId}": {
+      "schema": { "$ref": "#/entities/CabVehicle" },
+      "description": "Cab fleet vehicles"
+    },
+    "/drivers/{driverId}": {
+      "schema": { "$ref": "#/entities/Driver" },
+      "description": "Driver partner profiles and KYC details"
+    },
+    "/fareConfig/{configId}": {
+      "schema": { "$ref": "#/entities/FareConfig" },
+      "description": "Fare engine parameters and rate cards"
+    },
+    "/cabZones/{zoneId}": {
+      "schema": { "$ref": "#/entities/CabZone" },
+      "description": "Cab service zones and airport boundaries"
+    },
+    "/cabReviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/CabReview" },
+      "description": "Cab ride feedback and driver reviews"
+    },
+    "/driverLocations/{driverId}": {
+      "schema": { "$ref": "#/entities/DriverLocation" },
+      "description": "Real-time driver GPS coordinates"
+    },
+    "/cabTransactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/CabTransaction" },
+      "description": "Cab payments, driver payouts, and commissions"
     }
   }
 }

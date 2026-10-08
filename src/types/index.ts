@@ -1,4 +1,6 @@
-export type UserRole = 'customer' | 'agent' | 'admin' | 'super_admin';
+export type UserRole = 'customer' | 'agent' | 'admin' | 'super_admin' | 'driver';
+
+export * from './cab';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 

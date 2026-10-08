@@ -27,6 +27,32 @@ service firebase.storage {
           (firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
            firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'])
         );
+    // Driver KYC documents (licence, RC, insurance, police verification)
+    // Owner driver and Admin only
+    match /driverKYC/{driverId}/{fileName} {
+      allow read: if request.auth != null && (
+        request.auth.uid == driverId ||
+        (request.auth.token.email != null &&
+         (request.auth.token.email.lower() == 'roysahil579@gmail.com' ||
+          request.auth.token.email.lower() == 'dassahil3@gmail.com')) ||
+        (firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'])
+      );
+      allow write: if request.auth != null && (
+        request.auth.uid == driverId ||
+        (request.auth.token.email != null &&
+         (request.auth.token.email.lower() == 'roysahil579@gmail.com' ||
+          request.auth.token.email.lower() == 'dassahil3@gmail.com')) ||
+        (firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'])
+      ) &&
+      request.resource.size <= 10 * 1024 * 1024 &&
+      request.resource.contentType.matches('(image/(jpeg|png|webp)|application/pdf)');
+      allow delete: if request.auth != null && (
+        request.auth.uid == driverId ||
+        (firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'])
+      );
     }
   }
 }

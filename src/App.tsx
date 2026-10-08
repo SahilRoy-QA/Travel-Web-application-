@@ -18,6 +18,8 @@ import { HotelDetailPage } from './pages/HotelDetailPage';
 import { PackageListingPage } from './pages/PackageListingPage';
 import { PackageDetailPage } from './pages/PackageDetailPage';
 import { ServicesPage } from './pages/ServicesPage';
+import { CabBookingPage } from './pages/CabBookingPage';
+import { CabLiveTripPage } from './pages/CabLiveTripPage';
 import { BookingFlowPage } from './pages/BookingFlowPage';
 import { MyTripsPage } from './pages/MyTripsPage';
 import { WishlistPage } from './pages/WishlistPage';
@@ -76,6 +78,8 @@ export default function App() {
               <Route path="/packages" element={<PublicLayout><PackageListingPage /></PublicLayout>} />
               <Route path="/packages/:id" element={<PublicLayout><PackageDetailPage /></PublicLayout>} />
               <Route path="/services" element={<PublicLayout><ServicesPage /></PublicLayout>} />
+              <Route path="/cabs" element={<PublicLayout><CabBookingPage /></PublicLayout>} />
+              <Route path="/cabs/trip/:id" element={<PublicLayout><CabLiveTripPage /></PublicLayout>} />
               <Route path="/book" element={<PublicLayout><BookingFlowPage /></PublicLayout>} />
               <Route path="/trips" element={<PublicLayout><MyTripsPage /></PublicLayout>} />
               <Route path="/wishlist" element={<PublicLayout><WishlistPage /></PublicLayout>} />

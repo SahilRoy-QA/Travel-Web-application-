@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
+  Car,
   Compass,
   Hotel,
   Luggage,
   MapPin,
+  Navigation,
   Search,
   Users,
 } from 'lucide-react';
@@ -17,9 +19,9 @@ export const HeroSearch: React.FC = () => {
   const navigate = useNavigate();
 
   const heroSection = sections.find((s) => s.type === 'hero');
-  const [activeTab, setActiveTab] = useState<'hotels' | 'packages' | 'services'>('hotels');
+  const [activeTab, setActiveTab] = useState<'hotels' | 'packages' | 'cabs' | 'services'>('hotels');
 
-  // Search parameters
+  // Search parameters for Stays
   const [city, setCity] = useState('');
   const [checkIn, setCheckIn] = useState(() => {
     const today = new Date();
@@ -34,7 +36,18 @@ export const HeroSearch: React.FC = () => {
   const [rooms, setRooms] = useState(1);
   const [guestPickerOpen, setGuestPickerOpen] = useState(false);
 
+  // Search parameters for Cabs
+  const [cabTripType, setCabTripType] = useState<'point_to_point' | 'airport' | 'rental' | 'outstation_one_way'>('point_to_point');
+  const [cabPickup, setCabPickup] = useState('');
+  const [cabDrop, setCabDrop] = useState('');
+
   const topCities = ['Goa', 'Jaipur', 'Kerala', 'Manali', 'Udaipur', 'Dubai'];
+  const topCabRoutes = [
+    { label: 'Delhi → IGI Airport', pickup: 'Connaught Place, New Delhi', drop: 'Indira Gandhi International Airport (DEL)', type: 'airport' },
+    { label: 'Mumbai → Pune', pickup: 'Bandra West, Mumbai', drop: 'Pune Shivajinagar', type: 'outstation_one_way' },
+    { label: 'BLR Airport Drop', pickup: 'Koramangala, Bengaluru', drop: 'Kempegowda International Airport (BLR)', type: 'airport' },
+    { label: 'Delhi → Jaipur', pickup: 'Delhi NCR', drop: 'Jaipur Pink City', type: 'outstation_one_way' },
+  ];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +63,13 @@ export const HeroSearch: React.FC = () => {
       const params = new URLSearchParams();
       if (city) params.set('destination', city);
       navigate(`/packages?${params.toString()}`);
+    } else if (activeTab === 'cabs') {
+      const params = new URLSearchParams();
+      params.set('tripType', cabTripType);
+      if (cabPickup) params.set('pickup', cabPickup);
+      if (cabDrop) params.set('drop', cabDrop);
+      params.set('date', checkIn);
+      navigate(`/cabs?${params.toString()}`);
     } else {
       const params = new URLSearchParams();
       if (city) params.set('city', city);
@@ -107,6 +127,18 @@ export const HeroSearch: React.FC = () => {
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('cabs')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === 'cabs'
+                  ? 'bg-sky-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Car className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>Mobility / Cabs</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('services')}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
                 activeTab === 'services'
@@ -115,11 +147,104 @@ export const HeroSearch: React.FC = () => {
               }`}
             >
               <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>Cabs & Services</span>
+              <span>Other Services</span>
             </button>
           </div>
 
           {/* Search Form Inputs */}
+          {activeTab === 'cabs' ? (
+            <form onSubmit={handleSearch} className="pt-3 sm:pt-4 space-y-3">
+              {/* Cab Trip Type Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'point_to_point', label: 'Local City' },
+                  { id: 'airport', label: 'Airport Transfer' },
+                  { id: 'rental', label: 'Hourly Rental' },
+                  { id: 'outstation_one_way', label: 'Outstation' },
+                ].map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => setCabTripType(type.id as any)}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
+                      cabTripType === type.id
+                        ? 'bg-sky-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 items-center">
+                {/* Pickup */}
+                <div className="md:col-span-4 relative min-w-0">
+                  <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1 ml-1 truncate">
+                    Pickup Point
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-emerald-500 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={cabPickup}
+                      onChange={(e) => setCabPickup(e.target.value)}
+                      placeholder="e.g. Connaught Place, Hotel Oberoi"
+                      className="w-full pl-10 pr-3 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Drop */}
+                <div className="md:col-span-4 relative min-w-0">
+                  <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1 ml-1 truncate">
+                    {cabTripType === 'rental' ? 'City / Base Zone' : 'Drop Destination'}
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-rose-500 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={cabDrop}
+                      onChange={(e) => setCabDrop(e.target.value)}
+                      placeholder={
+                        cabTripType === 'rental'
+                          ? 'e.g. Delhi NCR 8hr/80km'
+                          : 'e.g. DEL Airport Terminal 3, Cyber City'
+                      }
+                      className="w-full pl-10 pr-3 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="md:col-span-2 min-w-0">
+                  <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1 ml-1 truncate">
+                    Ride Date
+                  </label>
+                  <div className="relative min-w-0">
+                    <Calendar className="absolute left-2.5 sm:left-3 top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 pointer-events-none" />
+                    <input
+                      type="date"
+                      value={checkIn}
+                      onChange={(e) => setCheckIn(e.target.value)}
+                      className="w-full pl-7 sm:pl-9 pr-1 sm:pr-2 py-2 sm:py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Search Cabs Button */}
+                <div className="md:col-span-2 flex items-end">
+                  <button
+                    type="submit"
+                    className="w-full py-3 sm:py-3.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-lg shadow-sky-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer mt-1 md:mt-0"
+                  >
+                    <Car className="w-4 h-4" />
+                    <span>Find Cabs</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          ) : (
           <form onSubmit={handleSearch} className="pt-3 sm:pt-4 grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 items-center">
             {/* Destination Input */}
             <div className="md:col-span-4 relative min-w-0">
@@ -284,20 +409,40 @@ export const HeroSearch: React.FC = () => {
               </button>
             </div>
           </form>
+          )}
 
           {/* Quick Destination Chips */}
           <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Trending Now:</span>
-            {topCities.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCity(c)}
-                className="hover:text-sky-600 dark:hover:text-sky-400 font-medium transition cursor-pointer"
-              >
-                {c}
-              </button>
-            ))}
+            <span className="font-semibold text-slate-700 dark:text-slate-300">
+              {activeTab === 'cabs' ? 'Popular Cab Routes:' : 'Trending Now:'}
+            </span>
+            {activeTab === 'cabs' ? (
+              topCabRoutes.map((r) => (
+                <button
+                  key={r.label}
+                  type="button"
+                  onClick={() => {
+                    setCabPickup(r.pickup);
+                    setCabDrop(r.drop);
+                    setCabTripType(r.type as any);
+                  }}
+                  className="hover:text-sky-600 dark:hover:text-sky-400 font-medium transition cursor-pointer"
+                >
+                  {r.label}
+                </button>
+              ))
+            ) : (
+              topCities.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCity(c)}
+                  className="hover:text-sky-600 dark:hover:text-sky-400 font-medium transition cursor-pointer"
+                >
+                  {c}
+                </button>
+              ))
+            )}
           </div>
         </div>
       </div>

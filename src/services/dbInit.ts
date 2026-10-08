@@ -19,6 +19,8 @@ import {
   samplePackages,
   sampleServices,
 } from './seedData';
+import { defaultFareConfig } from './defaultCabFareConfig';
+import { sampleCabVehicles } from './cabService';
 
 export async function ensureInitialSettings() {
   try {
@@ -31,6 +33,16 @@ export async function ensureInitialSettings() {
       await setDoc(doc(db, 'settings', 'featureFlags'), defaultFeatureFlags);
       await setDoc(doc(db, 'settings', 'policies'), defaultPolicies);
       console.log('Default settings seeded to Firestore.');
+    }
+
+    // Ensure Fare Config exists
+    try {
+      const fareSnap = await getDoc(doc(db, 'fareConfig', 'global_v1'));
+      if (!fareSnap.exists()) {
+        await setDoc(doc(db, 'fareConfig', 'global_v1'), defaultFareConfig);
+      }
+    } catch {
+      // Ignore if offline
     }
 
     // Ensure core coupons exist in Firestore
@@ -59,6 +71,12 @@ export async function seedAllDemoData(onProgress?: (msg: string) => void) {
     await setDoc(doc(db, 'settings', 'sections'), { list: defaultSections });
     await setDoc(doc(db, 'settings', 'featureFlags'), defaultFeatureFlags);
     await setDoc(doc(db, 'settings', 'policies'), defaultPolicies);
+
+    onProgress?.('Seeding Cab Fare Configuration & Vehicles...');
+    await setDoc(doc(db, 'fareConfig', 'global_v1'), defaultFareConfig);
+    for (const veh of sampleCabVehicles) {
+      await setDoc(doc(db, 'cabVehicles', veh.id), veh);
+    }
 
     onProgress?.('Seeding Destinations...');
     for (const dest of sampleDestinations) {

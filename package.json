@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
+    "test:cabs": "tsx scripts/run-cab-tests.ts",
     "pwa:icons": "node scripts/generate-icons.js",
     "twa:init": "npx @bubblewrap/cli init",
     "twa:build": "npx @bubblewrap/cli build",
