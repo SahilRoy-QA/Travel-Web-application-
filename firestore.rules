@@ -37,12 +37,6 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agent';
     }
 
-    function isDriver() {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'driver';
-    }
-
     // Validation helpers
     function isValidId(id) {
       return id is string && id.size() <= 128;
@@ -58,7 +52,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isSignedIn() && request.auth.uid == userId && (
-        request.resource.data.role in ['customer', 'agent', 'driver'] ||
+        request.resource.data.role == 'customer' ||
+        request.resource.data.role == 'agent' ||
         (isSuperAdminEmail() && request.resource.data.role in ['admin', 'super_admin'])
       );
       allow update: if isAdmin() || (
@@ -224,126 +219,6 @@ service cloud.firestore {
     match /heroCarousel/slides/items/{slideId} {
       allow read: if resource.data.active == true || isAdmin();
       allow write: if isAdmin() && isValidCarouselSlide(request.resource.data);
-    }
-
-    // ==========================================
-    // CAB MODULE RULES
-    // ==========================================
-
-    // Fare Configuration (Managed by Admins, read by all users for real-time fare calculation)
-    match /fareConfig/{configId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    // Cab Vehicles (Fleet catalog read by customers & drivers, write by Admins)
-    match /cabVehicles/{vehicleId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    // Driver Profiles & KYC
-    match /drivers/{driverId} {
-      // Driver can view own profile, admin can view all, customers can view assigned driver
-      allow get: if isOwner(driverId) || isAdmin() || (
-        isSignedIn()
-      );
-      allow list: if isAdmin();
-      // Onboarding & CRUD restricted to Admin, driver can toggle online status
-      allow create: if isAdmin();
-      allow update: if isAdmin() || (
-        isOwner(driverId) &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'activeBookingId'])
-      );
-      allow delete: if isAdmin();
-    }
-
-    // Live Driver GPS Telemetry
-    match /driverLocations/{driverId} {
-      // Location is readable by authenticated users during live trip & booking
-      allow get, list: if isSignedIn();
-      // Only the authenticated driver can publish their own location
-      allow create, update: if isOwner(driverId) && (isDriver() || isAdmin());
-      allow delete: if isAdmin() || isOwner(driverId);
-    }
-
-    // Cab Operating Zones & Flat Fare Airport Zones
-    match /cabZones/{zoneId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    // Cab Bookings
-    match /cabBookings/{bookingId} {
-      // Customer reads own, Driver reads assigned, Admin reads all
-      allow get: if (isSignedIn() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.driverId == request.auth.uid ||
-        isAdmin()
-      )) || (!isSignedIn() && resource.data.userId == 'guest_traveler');
-
-      allow list: if isSignedIn() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.driverId == request.auth.uid ||
-        isAdmin()
-      );
-
-      // Customer creates own booking (or guest booking)
-      allow create: if (isSignedIn() && request.resource.data.userId == request.auth.uid) ||
-                       (!isSignedIn() && request.resource.data.userId == 'guest_traveler') ||
-                       isAdmin();
-
-      // Updates:
-      // 1. Admin: full control
-      // 2. Customer: can ONLY cancel requested/confirmed ride
-      // 3. Driver: can ONLY update ride status to driver_arriving, trip_started (with valid OTP), completed
-      allow update: if isAdmin() || (
-        // Customer cancellation only
-        isSignedIn() &&
-        resource.data.userId == request.auth.uid &&
-        request.resource.data.status == 'cancelled' &&
-        resource.data.status in ['requested', 'confirmed', 'driver_assigned'] &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancellationReason', 'cancellationFee', 'statusHistory', 'updatedAt'])
-      ) || (
-        // Driver status transition
-        isDriver() &&
-        resource.data.driverId == request.auth.uid &&
-        (
-          (resource.data.status == 'driver_assigned' && request.resource.data.status == 'driver_arriving') ||
-          (resource.data.status == 'driver_arriving' && request.resource.data.status == 'trip_started') ||
-          (resource.data.status == 'trip_started' && request.resource.data.status == 'completed')
-        ) &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'statusHistory', 'updatedAt'])
-      ) || (
-        // Customer rating after completion
-        isSignedIn() &&
-        resource.data.userId == request.auth.uid &&
-        resource.data.status == 'completed' &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['driverRating', 'vehicleRating', 'reviewComment', 'updatedAt'])
-      );
-
-      allow delete: if isAdmin();
-    }
-
-    // Cab Reviews
-    match /cabReviews/{reviewId} {
-      allow get, list: if resource.data.isApproved == true || isAdmin() || (
-        isSignedIn() && resource.data.userId == request.auth.uid
-      );
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-
-    // Cab Financial Transactions
-    match /cabTransactions/{transactionId} {
-      allow get: if isAdmin() || (
-        isSignedIn() && (
-          resource.data.userId == request.auth.uid ||
-          resource.data.driverId == request.auth.uid
-        )
-      );
-      allow list: if isAdmin();
-      allow write: if isAdmin();
     }
   }
 }

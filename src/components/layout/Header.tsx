@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Car,
   Compass,
   Heart,
   Hotel,
@@ -60,8 +59,7 @@ export const Header: React.FC = () => {
   const navLinks = [
     { label: 'Hotels & Resorts', path: '/hotels', icon: Hotel },
     { label: 'Holiday Tours', path: '/packages', icon: Luggage },
-    { label: 'Mobility & Cabs', path: '/cabs', icon: Car },
-    { label: 'Services', path: '/services', icon: Compass },
+    { label: 'Mobility & Cabs', path: '/services', icon: Compass },
   ];
 
   return (
